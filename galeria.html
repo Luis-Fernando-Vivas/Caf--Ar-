@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería — Café Arú</title>
+<meta name="description" content="Galería de Café Arú: fotos de nuestra finca en Palermo, Huila, el proceso Honey, la familia cafetera y momentos en comunidad.">
+<link rel="icon" href="img/logo-cafe-aru.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="page-loader"><img src="img/logo-cafe-aru-light.png" alt="Cargando"></div>
+<div class="reveal-cursor"></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" data-cursor-hover>
+      <img class="logo-light" src="img/logo-cafe-aru-light.png" alt="Café Arú">
+      <img class="logo-dark" src="img/logo-cafe-aru.png" alt="Café Arú">
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">Inicio</a>
+      <a href="producto.html">Producto</a>
+      <a href="nosotros.html">Nosotros</a>
+      <a href="galeria.html">Galería</a>
+      <a href="index.html#contacto">Contacto</a>
+    </nav>
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" data-buy-one data-magnetic>
+        Comprar
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+      <button class="burger" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav">
+  <a href="index.html">Inicio</a>
+  <a href="producto.html">Producto</a>
+  <a href="nosotros.html">Nosotros</a>
+  <a href="galeria.html">Galería</a>
+  <a href="index.html#contacto">Contacto</a>
+</nav>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / Galería</div>
+    <h1 data-reveal>Cada proceso vivido<br>es un paso más.</h1>
+    <p class="lead" data-reveal style="transition-delay:.1s">Un recorrido visual por nuestra finca, nuestro proceso Honey y la familia detrás de Café Arú.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="filter-row" data-reveal>
+      <button class="active" data-filter="all">Todos</button>
+      <button data-filter="finca">Finca</button>
+      <button data-filter="proceso">Proceso</button>
+      <button data-filter="familia">Familia</button>
+      <button data-filter="comunidad">Comunidad</button>
+    </div>
+
+    <div class="gallery-grid" data-reveal-group style="grid-auto-rows:220px;">
+      <figure class="big" data-category="finca" data-reveal data-lightbox="img/finca-paisaje.jpg" data-caption="Ladera cafetera · Huila">
+        <img src="img/finca-paisaje.jpg" alt="Ladera cafetera en Huila"><figcaption>Ladera cafetera · Huila</figcaption>
+      </figure>
+      <figure data-category="proceso" data-reveal data-lightbox="img/proceso-secado.jpg" data-caption="Secado del café tipo Honey">
+        <img src="img/proceso-secado.jpg" alt="Secado del café"><figcaption>Secado Honey</figcaption>
+      </figure>
+      <figure data-category="proceso" data-reveal data-lightbox="img/cerezas-cosecha.jpg" data-caption="Cerezas recién cosechadas">
+        <img src="img/cerezas-cosecha.jpg" alt="Cerezas de café recién cosechadas"><figcaption>Cosecha del día</figcaption>
+      </figure>
+      <figure data-category="familia" data-reveal data-lightbox="img/familia-aru.jpg" data-caption="Familia Café Arú">
+        <img src="img/familia-aru.jpg" alt="Familia Café Arú"><figcaption>Familia Arú</figcaption>
+      </figure>
+      <figure data-category="finca" data-reveal data-lightbox="img/mujer-flores-cafe.jpg" data-caption="Floración del cafeto">
+        <img src="img/mujer-flores-cafe.jpg" alt="Mujer entre flores de café"><figcaption>Floración</figcaption>
+      </figure>
+      <figure class="big" data-category="familia" data-reveal data-lightbox="img/visita-finca.jpg" data-caption="Visita a la finca familiar">
+        <img src="img/visita-finca.jpg" alt="Visita a la finca familiar Café Arú"><figcaption>Nuestra casa en la finca</figcaption>
+      </figure>
+      <figure data-category="comunidad" data-reveal data-lightbox="img/feria-cafetera.jpg" data-caption="Equipo Arú en feria cafetera">
+        <img src="img/feria-cafetera.jpg" alt="Equipo Café Arú en feria cafetera"><figcaption>Feria cafetera</figcaption>
+      </figure>
+      <figure data-category="comunidad" data-reveal data-lightbox="img/equipo-patrocinio.jpg" data-caption="Café Arú apoyando el deporte local">
+        <img src="img/equipo-patrocinio.jpg" alt="Café Arú patrocinando equipo de fútbol"><figcaption>Con la comunidad</figcaption>
+      </figure>
+      <figure data-category="finca" data-reveal data-lightbox="img/ladera-flor-cafe.jpg" data-caption="Ladera en floración">
+        <img src="img/ladera-flor-cafe.jpg" alt="Ladera de café en floración"><figcaption>Ladera en flor</figcaption>
+      </figure>
+      <figure class="big" data-category="familia" data-reveal data-lightbox="img/fundadores-mirador.jpg" data-caption="Los fundadores de Café Arú">
+        <img src="img/fundadores-mirador.jpg" alt="Fundadores de Café Arú en un mirador de Huila"><figcaption>Los fundadores</figcaption>
+      </figure>
+      <figure data-category="proceso" data-reveal data-lightbox="img/cosecha-rama.jpg" data-caption="Recolección selectiva">
+        <img src="img/cosecha-rama.jpg" alt="Recolección selectiva de café"><figcaption>Recolección</figcaption>
+      </figure>
+      <figure data-category="finca" data-reveal data-lightbox="img/transporte-mulas.jpg" data-caption="Transporte tradicional en la finca">
+        <img src="img/transporte-mulas.jpg" alt="Transporte en mulas por la finca"><figcaption>Tradición campesina</figcaption>
+      </figure>
+      <figure data-category="comunidad" data-reveal data-lightbox="img/reconocimiento-palermo.jpg" data-caption="3er puesto, Concurso de Calidad">
+        <img src="img/reconocimiento-palermo.jpg" alt="Reconocimiento Café Arú en Palermo"><figcaption>Reconocimiento</figcaption>
+      </figure>
+      <figure data-category="proceso" data-reveal data-lightbox="img/mujer-recolectora.png" data-caption="Recolección selectiva de cerezas">
+        <img src="img/mujer-recolectora.png" alt="Mujer recolectando cerezas de café"><figcaption>Manos que recolectan</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="cta-banner" data-reveal="scale">
+      <h2>¿Te provocó un café?</h2>
+      <p class="lead">Bolsa de 500g, $50.000 COP. El mismo café que ves en estas fotos, directo a tu casa.</p>
+      <button class="btn btn-dark" data-buy-one data-magnetic>
+        Comprar ahora
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer" id="contacto">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="img/logo-cafe-aru-light.png" alt="Café Arú">
+        <p>Café tipo Honey, 100% colombiano. Producción familiar y artesanal desde las montañas de Palermo, Huila.</p>
+        <div class="footer-social">
+          <a href="https://www.instagram.com/cafe.aru/" target="_blank" rel="noopener" aria-label="Instagram" data-cursor-hover>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+          </a>
+          <a href="https://wa.me/573208022813" target="_blank" rel="noopener" aria-label="WhatsApp" data-cursor-hover>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.4L3 20l1.2-5.3A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="producto.html">Producto</a></li>
+          <li><a href="nosotros.html">Nosotros</a></li>
+          <li><a href="galeria.html">Galería</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="tel:+573208022813">+57 320 802 2813</a></li>
+          <li>Lun – Vie: 8:00am – 5:00pm</li>
+          <li>Sáb: 8:00am – 4:00pm</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Café Arú</h4>
+        <ul>
+          <li>Palermo, Huila — Colombia</li>
+          <li>Café tipo Honey artesanal</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Café Arú. Todos los derechos reservados.</span>
+      <span>Hecho con pasión familiar 🌱</span>
+    </div>
+  </div>
+</footer>
+
+<div class="lightbox">
+  <button class="lightbox-close" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <button class="lightbox-prev" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="lightbox-next" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+  <img src="" alt="">
+  <div class="lightbox-caption"></div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
