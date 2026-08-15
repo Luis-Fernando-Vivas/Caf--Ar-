@@ -1,0 +1,12 @@
+{
+  "name": "cafe-aru",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sitio de Café Arú (estático) + funciones serverless (Vercel): checkout Wompi y backoffice de pedidos.",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
+}

@@ -4,13 +4,18 @@
 
 /* ---------------------------------------------------------------------
    CONFIGURACIÓN DE COMPRA
-   Cuando tengas tu link de pago (Wompi / PayU / Mercado Pago / etc.)
-   pégalo en PAYMENT_LINK y el botón "Comprar" lo usará automáticamente.
-   Mientras tanto, el botón arma un pedido por WhatsApp con el detalle
-   y el total, para no perder ventas.
+   Orden en el que el botón "Comprar" intenta cobrar:
+     1) PAYMENT_LINK, si lo pegaste aquí manualmente (siempre gana).
+     2) Wompi Web Checkout, vía la función serverless api/wompi-signature.js
+        (Vercel) -- funciona automáticamente en cuanto configures
+        WOMPI_PUBLIC_KEY y WOMPI_INTEGRITY_SECRET en Vercel. No hay que
+        tocar este archivo.
+     3) Si ninguna de las dos está lista, arma el pedido por WhatsApp,
+        para no perder ventas mientras tanto.
 --------------------------------------------------------------------- */
 const CHECKOUT_CONFIG = {
-  PAYMENT_LINK: "", // <-- pega aquí tu link de pago cuando esté listo
+  PAYMENT_LINK: "", // <-- pega aquí un link de pago fijo si quieres saltarte Wompi
+  WOMPI_SIGNATURE_ENDPOINT: "/api/wompi-signature",
   WHATSAPP_NUMBER: "573208022813",
   PRODUCT_NAME: "Café Arú Honey 500g",
   UNIT_PRICE: 50000,
@@ -20,16 +25,59 @@ function formatCOP(n){
   return n.toLocaleString('es-CO', { maximumFractionDigits:0 });
 }
 
-function goToCheckout(qty = 1){
-  qty = Math.max(1, qty | 0);
-  if (CHECKOUT_CONFIG.PAYMENT_LINK) {
-    window.open(CHECKOUT_CONFIG.PAYMENT_LINK, '_blank', 'noopener');
-    return;
-  }
+function whatsAppCheckout(qty){
+  // Registra el pedido en el backoffice para que quede visible en /admin, sin bloquear
+  // ni depender de que esto funcione -- si falla, el cliente igual debe poder escribir.
+  fetch('/api/orders/whatsapp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quantity: qty }),
+  }).catch(() => {});
+
   const total = qty * CHECKOUT_CONFIG.UNIT_PRICE;
   const msg = `Hola Café Arú! Quiero pedir ${qty} bolsa(s) de ${CHECKOUT_CONFIG.PRODUCT_NAME}.\nTotal estimado: $${formatCOP(total)} COP.\n¿Me ayudan a confirmar el pedido y el envío?`;
   const url = `https://wa.me/${CHECKOUT_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank', 'noopener');
+}
+
+async function payWithWompi(qty){
+  const res = await fetch(CHECKOUT_CONFIG.WOMPI_SIGNATURE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quantity: qty }),
+  });
+  if (!res.ok) throw new Error('wompi-not-ready');
+  const data = await res.json();
+
+  const redirectUrl = `${location.origin}/gracias.html`;
+  const params = new URLSearchParams({
+    'public-key': data.publicKey,
+    currency: data.currency,
+    'amount-in-cents': String(data.amountInCents),
+    reference: data.reference,
+    'signature:integrity': data.signature,
+    'redirect-url': redirectUrl,
+  });
+  window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
+}
+
+async function goToCheckout(qty = 1, btn = null){
+  qty = Math.max(1, qty | 0);
+
+  if (CHECKOUT_CONFIG.PAYMENT_LINK) {
+    window.open(CHECKOUT_CONFIG.PAYMENT_LINK, '_blank', 'noopener');
+    return;
+  }
+
+  const originalLabel = btn ? btn.innerHTML : null;
+  if (btn) { btn.disabled = true; btn.style.opacity = '.7'; }
+
+  try {
+    await payWithWompi(qty); // on success this navigates away, so nothing else runs
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; if (originalLabel !== null) btn.innerHTML = originalLabel; }
+    whatsAppCheckout(qty);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -156,10 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderQty();
 
   document.querySelectorAll('[data-buy]').forEach(btn => {
-    btn.addEventListener('click', () => goToCheckout(qty));
+    btn.addEventListener('click', () => goToCheckout(qty, btn));
   });
   document.querySelectorAll('[data-buy-one]').forEach(btn => {
-    btn.addEventListener('click', () => goToCheckout(1));
+    btn.addEventListener('click', () => goToCheckout(1, btn));
   });
 
   /* ---------------- product image gallery ---------------- */

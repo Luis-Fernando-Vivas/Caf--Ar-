@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedidos — Backoffice Café Arú</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../img/logo-cafe-aru.png">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-header-left">
+      <img src="../img/logo-cafe-aru-light.png" alt="Café Arú">
+      <span class="admin-title">Backoffice</span>
+    </div>
+    <div class="admin-header-actions">
+      <button id="refreshBtn" class="btn btn-ghost-light btn-sm">Actualizar</button>
+      <button id="logoutBtn" class="btn btn-primary btn-sm">Salir</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="container">
+
+    <div class="admin-stats">
+      <div class="admin-stat-card"><span>Pedidos totales</span><strong id="statTotal">—</strong></div>
+      <div class="admin-stat-card"><span>Pedidos pagados</span><strong id="statPaid">—</strong></div>
+      <div class="admin-stat-card"><span>Pendientes</span><strong id="statPending">—</strong></div>
+      <div class="admin-stat-card"><span>Ingresos confirmados</span><strong id="statRevenue">—</strong></div>
+    </div>
+
+    <div class="admin-panel">
+      <div class="admin-panel-head">
+        <h2>Pedidos</h2>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Referencia</th>
+              <th>Canal</th>
+              <th>Estado</th>
+              <th>Cant.</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+              <th>Cambiar estado</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+        <div id="ordersEmpty" class="admin-empty" style="display:none;">Todavía no hay pedidos registrados.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="../js/admin.js"></script>
+</body>
+</html>

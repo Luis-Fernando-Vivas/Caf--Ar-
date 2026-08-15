@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estado de tu pedido — Café Arú</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/logo-cafe-aru.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .status-wrap{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:8rem 1.5rem 3rem; background:var(--c-cream);
+  }
+  .status-card{
+    max-width:520px; width:100%; background:var(--c-white); border-radius:24px;
+    padding:clamp(2rem,5vw,3rem); text-align:center; box-shadow:0 30px 60px -30px rgba(23,17,12,.25);
+  }
+  .status-card img.logo{ height:52px; margin-bottom:1.5rem; }
+  .status-icon{
+    width:72px; height:72px; border-radius:50%; margin:0 auto 1.4rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .status-icon svg{ width:34px; height:34px; }
+  .status-icon.ok{ background:rgba(0,176,144,.12); color:#00b090; }
+  .status-icon.pending{ background:rgba(255,205,53,.18); color:var(--c-kraft-dark); }
+  .status-icon.fail{ background:rgba(179,32,39,.12); color:var(--c-red); }
+  .status-card h1{ font-size:1.7rem; margin-bottom:.6rem; }
+  .status-card p{ color:var(--c-text-soft); line-height:1.6; }
+  .status-meta{
+    margin:1.6rem 0; padding:1rem 1.2rem; border-radius:14px; background:var(--c-cream-2);
+    text-align:left; font-size:.85rem; color:var(--c-text-soft); display:none;
+  }
+  .status-meta.show{ display:block; }
+  .status-meta div{ display:flex; justify-content:space-between; padding:.3rem 0; }
+  .status-meta strong{ color:var(--c-text); font-weight:600; }
+  .status-actions{ display:flex; gap:.8rem; justify-content:center; flex-wrap:wrap; margin-top:1.8rem; }
+</style>
+</head>
+<body>
+
+<div class="status-wrap">
+  <div class="status-card">
+    <img class="logo" src="img/logo-cafe-aru.png" alt="Café Arú">
+
+    <div id="statusIcon" class="status-icon pending">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    </div>
+    <h1 id="statusTitle">Consultando tu pago…</h1>
+    <p id="statusText">Un momento, estamos verificando el estado de tu transacción con Wompi.</p>
+
+    <div id="statusMeta" class="status-meta">
+      <div><span>Referencia</span><strong id="metaReference">—</strong></div>
+      <div><span>Monto</span><strong id="metaAmount">—</strong></div>
+      <div><span>Estado</span><strong id="metaStatus">—</strong></div>
+    </div>
+
+    <div class="status-actions">
+      <a href="index.html" class="btn btn-ghost btn-sm">Volver al inicio</a>
+      <a id="whatsappHelp" href="https://wa.me/573208022813" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Hablar por WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const icon = document.getElementById('statusIcon');
+  const title = document.getElementById('statusTitle');
+  const text = document.getElementById('statusText');
+  const meta = document.getElementById('statusMeta');
+  const metaReference = document.getElementById('metaReference');
+  const metaAmount = document.getElementById('metaAmount');
+  const metaStatus = document.getElementById('metaStatus');
+
+  function setState(kind, iconPath, h1, p){
+    icon.className = 'status-icon ' + kind;
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + iconPath + '</svg>';
+    title.textContent = h1;
+    text.textContent = p;
+  }
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    setState('fail',
+      '<path d="M18 6L6 18M6 6l12 12"/>',
+      'No encontramos tu transacción',
+      'Si acabas de intentar pagar, escríbenos por WhatsApp y confirmamos tu pedido manualmente.');
+    return;
+  }
+
+  fetch('https://api.wompi.co/v1/transactions/' + encodeURIComponent(id))
+    .then(res => { if (!res.ok) throw new Error('lookup-failed'); return res.json(); })
+    .then(json => {
+      const tx = json && json.data;
+      if (!tx) throw new Error('no-data');
+
+      metaReference.textContent = tx.reference || '—';
+      metaAmount.textContent = tx.amount_in_cents
+        ? '$' + Math.round(tx.amount_in_cents / 100).toLocaleString('es-CO') + ' COP'
+        : '—';
+      metaStatus.textContent = tx.status || '—';
+      meta.classList.add('show');
+
+      switch (tx.status) {
+        case 'APPROVED':
+          setState('ok',
+            '<path d="M20 6L9 17l-5-5"/>',
+            '¡Pago aprobado!',
+            'Gracias por tu compra. Te escribiremos por WhatsApp para coordinar el envío de tu Café Arú.');
+          break;
+        case 'PENDING':
+          setState('pending',
+            '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+            'Pago en proceso',
+            'Wompi todavía está confirmando tu pago. Te avisaremos apenas se apruebe.');
+          break;
+        case 'DECLINED':
+        case 'ERROR':
+        case 'VOIDED':
+          setState('fail',
+            '<path d="M18 6L6 18M6 6l12 12"/>',
+            'El pago no se completó',
+            'Tu transacción fue ' + tx.status.toLowerCase() + '. Puedes intentar de nuevo o escribirnos por WhatsApp.');
+          break;
+        default:
+          setState('pending',
+            '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+            'Estado: ' + (tx.status || 'desconocido'),
+            'Escríbenos por WhatsApp si tienes dudas sobre tu pedido.');
+      }
+    })
+    .catch(() => {
+      setState('pending',
+        '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+        'No pudimos confirmar el estado automáticamente',
+        'Tu pago pudo haberse procesado igual. Escríbenos por WhatsApp con tu referencia y lo confirmamos.');
+    });
+})();
+</script>
+
+</body>
+</html>

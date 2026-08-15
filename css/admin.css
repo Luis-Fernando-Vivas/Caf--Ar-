@@ -1,0 +1,82 @@
+/* Café Arú — Backoffice (usa las variables de marca de style.css) */
+
+.admin-body{
+  min-height:100vh; background:var(--c-cream); font-family:var(--font-body); color:var(--c-text);
+}
+
+/* ---------- login ---------- */
+.admin-login-wrap{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem;
+}
+.admin-login-card{
+  width:100%; max-width:380px; background:var(--c-white); border-radius:20px;
+  padding:2.4rem; box-shadow:0 30px 60px -30px rgba(23,17,12,.25); text-align:center;
+}
+.admin-login-card img{ height:44px; margin-bottom:1.4rem; }
+.admin-login-card h1{ font-size:1.4rem; margin-bottom:.4rem; }
+.admin-login-card p{ color:var(--c-text-soft); font-size:.88rem; margin-bottom:1.6rem; }
+.admin-field{ text-align:left; margin-bottom:1.2rem; }
+.admin-field label{ display:block; font-size:.8rem; font-weight:600; margin-bottom:.4rem; color:var(--c-text-soft); }
+.admin-field input{
+  width:100%; padding:.8em 1em; border-radius:10px; border:1px solid rgba(36,27,18,.18);
+  font-family:inherit; font-size:.95rem; background:var(--c-cream);
+}
+.admin-field input:focus{ outline:2px solid var(--c-red); outline-offset:1px; }
+.admin-error{ color:var(--c-red); font-size:.82rem; min-height:1.2em; margin-bottom:.8rem; }
+.admin-login-card .btn{ width:100%; }
+
+/* ---------- dashboard shell ---------- */
+.admin-header{
+  position:sticky; top:0; z-index:10; background:var(--c-black); color:var(--c-cream);
+  padding:1rem 0; display:flex; align-items:center;
+}
+.admin-header .container{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.admin-header img{ height:32px; }
+.admin-header .admin-title{ font-family:var(--font-display); font-size:1.1rem; margin-left:.8rem; }
+.admin-header-left{ display:flex; align-items:center; }
+.admin-header-actions{ display:flex; gap:.7rem; align-items:center; }
+
+.admin-main{ padding:2.2rem 0 4rem; }
+
+/* ---------- stat cards ---------- */
+.admin-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2.2rem; }
+.admin-stat-card{
+  background:var(--c-white); border-radius:16px; padding:1.4rem 1.5rem; border:1px solid rgba(36,27,18,.08);
+}
+.admin-stat-card span{ display:block; font-size:.78rem; color:var(--c-text-soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.4rem; }
+.admin-stat-card strong{ font-family:var(--font-display); font-size:1.7rem; color:var(--c-black); }
+@media (max-width:900px){ .admin-stats{ grid-template-columns:repeat(2,1fr); } }
+
+/* ---------- orders table ---------- */
+.admin-panel{
+  background:var(--c-white); border-radius:18px; border:1px solid rgba(36,27,18,.08); overflow:hidden;
+}
+.admin-panel-head{
+  display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.5rem;
+  border-bottom:1px solid rgba(36,27,18,.08);
+}
+.admin-panel-head h2{ font-size:1.1rem; }
+
+.admin-table-wrap{ overflow-x:auto; }
+table.admin-table{ width:100%; border-collapse:collapse; font-size:.87rem; min-width:760px; }
+.admin-table th, .admin-table td{ text-align:left; padding:.9rem 1.5rem; white-space:nowrap; }
+.admin-table thead th{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--c-text-soft);
+  border-bottom:1px solid rgba(36,27,18,.08);
+}
+.admin-table tbody tr{ border-bottom:1px solid rgba(36,27,18,.06); }
+.admin-table tbody tr:hover{ background:var(--c-cream); }
+.admin-table select{
+  padding:.4em .7em; border-radius:8px; border:1px solid rgba(36,27,18,.18); font-family:inherit; font-size:.82rem;
+  background:var(--c-white);
+}
+
+.status-badge{
+  display:inline-flex; align-items:center; gap:.4em; padding:.35em .8em; border-radius:100px;
+  font-size:.76rem; font-weight:600;
+}
+.status-badge.st-approved, .status-badge.st-paid_manually, .status-badge.st-shipped{ background:rgba(0,176,144,.12); color:#00875f; }
+.status-badge.st-pending, .status-badge.st-whatsapp_pending{ background:rgba(255,205,53,.2); color:var(--c-kraft-dark); }
+.status-badge.st-declined, .status-badge.st-cancelled, .status-badge.st-voided{ background:rgba(179,32,39,.12); color:var(--c-red); }
+
+.admin-empty{ padding:3rem 1.5rem; text-align:center; color:var(--c-text-soft); }
