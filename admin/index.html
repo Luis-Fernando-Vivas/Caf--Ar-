@@ -32,6 +32,28 @@
       <div class="admin-stat-card"><span>Pedidos pagados</span><strong id="statPaid">—</strong></div>
       <div class="admin-stat-card"><span>Pendientes</span><strong id="statPending">—</strong></div>
       <div class="admin-stat-card"><span>Ingresos confirmados</span><strong id="statRevenue">—</strong></div>
+      <div class="admin-stat-card"><span>Valor promedio</span><strong id="statAvg">—</strong></div>
+    </div>
+
+    <div class="admin-charts-row viz-root">
+      <div class="chart-card">
+        <h3>Ingresos por día</h3>
+        <div class="chart-sub">Últimos 14 días · pedidos pagados</div>
+        <div id="chartRevenue" class="chart-svg-wrap"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Pedidos por canal</h3>
+        <div class="chart-sub">Wompi vs. WhatsApp</div>
+        <div id="chartChannel" class="chart-svg-wrap"></div>
+      </div>
+    </div>
+
+    <div class="admin-charts-row viz-root" style="grid-template-columns:1fr; margin-bottom:1.4rem;">
+      <div class="chart-card">
+        <h3>Pedidos por estado</h3>
+        <div class="chart-sub">Todos los pedidos registrados</div>
+        <div id="chartStatus" class="chart-svg-wrap"></div>
+      </div>
     </div>
 
     <div class="admin-panel">
@@ -59,6 +81,8 @@
 
   </div>
 </main>
+
+<div id="vizTooltip" class="viz-tooltip" role="status" aria-live="polite"></div>
 
 <script src="../js/admin.js"></script>
 </body>
