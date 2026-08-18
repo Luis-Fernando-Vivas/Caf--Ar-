@@ -1,10 +1,15 @@
 // Checkout del carrito: reemplaza a los antiguos api/wompi-signature.js y
 // api/orders/whatsapp.js (que solo sabían cobrar 1 producto hardcodeado).
-// POST { items:[{product_id, quantity}], shipping_rate_id, coupon_code, channel }
+// POST { items:[{product_id, quantity}], shipping_rate_id, coupon_code, channel, preview }
 //
 // Nunca confía en precios/descuentos que mande el navegador: recalcula todo
 // desde la base de datos con lib/checkout.js#computeTotals, exactamente igual
 // para el canal Wompi y el canal WhatsApp.
+//
+// preview:true (usado por carrito.html para mostrar el total en vivo) calcula
+// los mismos totales pero NO crea el pedido ni gasta usos de cupón. Vive en
+// este mismo archivo -- y no en uno separado -- para no gastar una función
+// serverless aparte (Vercel Hobby limita a 12 por deployment).
 
 const crypto = require('crypto');
 const { sql, ensureSchema, isConfigured } = require('../lib/db');
@@ -40,6 +45,17 @@ module.exports = async (req, res) => {
         return;
       }
       throw err;
+    }
+
+    if (body.preview) {
+      res.status(200).json({
+        subtotal_cop: totals.subtotal_cop,
+        shipping_cop: totals.shipping_cop,
+        shipping_name: totals.shipping_name,
+        discount_cop: totals.discount_cop,
+        amount_cop: totals.amount_cop,
+      });
+      return;
     }
 
     let publicKey = null;

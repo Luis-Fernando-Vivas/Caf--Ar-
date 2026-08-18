@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addImageBtn').addEventListener('click', openUploadWidget);
   document.getElementById('refreshBtn').addEventListener('click', loadProducts);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/admin/session', { method: 'DELETE' });
     window.location.href = 'login.html';
   });
 });

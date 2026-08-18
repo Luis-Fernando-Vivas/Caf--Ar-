@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('couponForm').addEventListener('submit', createCoupon);
   document.getElementById('refreshBtn').addEventListener('click', loadCoupons);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/admin/session', { method: 'DELETE' });
     window.location.href = 'login.html';
   });
 });

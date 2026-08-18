@@ -106,13 +106,14 @@ async function refreshTotals() {
   const items = Cart.getItems();
   if (!items.length) return;
 
-  const res = await fetch('/api/cart-preview', {
+  const res = await fetch('/api/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       items: items.map((it) => ({ product_id: it.product_id, quantity: it.quantity })),
       shipping_rate_id: selectedShippingId,
       coupon_code: appliedCoupon || undefined,
+      preview: true,
     }),
   });
   const data = await res.json();

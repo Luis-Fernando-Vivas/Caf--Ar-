@@ -1,9 +1,16 @@
-// Login del backoffice: una sola contraseña compartida (ADMIN_PASSWORD),
-// sin gestión de usuarios. Al validar, deja una cookie de sesión firmada.
+// Sesión del backoffice: POST = login (contraseña -> cookie), DELETE = logout.
+// Unificado en un solo archivo para no gastar dos funciones serverless
+// separadas (Vercel Hobby limita a 12 por deployment).
 
-const { setSessionCookie, safeEqual } = require('../../lib/auth');
+const { setSessionCookie, clearSessionCookie, safeEqual } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
+  if (req.method === 'DELETE') {
+    clearSessionCookie(res);
+    res.status(200).json({ ok: true });
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Método no permitido' });
     return;

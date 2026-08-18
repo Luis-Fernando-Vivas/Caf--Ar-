@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rateForm').addEventListener('submit', createRate);
   document.getElementById('refreshBtn').addEventListener('click', loadRates);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/admin/session', { method: 'DELETE' });
     window.location.href = 'login.html';
   });
 });

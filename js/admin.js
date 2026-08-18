@@ -115,7 +115,7 @@ function initLoginPage(){
     const password = document.getElementById('password').value;
 
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/admin/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
@@ -582,7 +582,7 @@ function initDashboardPage(){
 
   document.getElementById('refreshBtn')?.addEventListener('click', () => { loadOrders(); loadWompiEnv(); });
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/admin/session', { method: 'DELETE' });
     window.location.href = 'login.html';
   });
 }
