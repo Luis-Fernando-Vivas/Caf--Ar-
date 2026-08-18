@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Productos — Backoffice Café Arú</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../img/logo-cafe-aru.png">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+<script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
+</head>
+<body class="admin-body">
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-header-left">
+      <img src="../img/logo-cafe-aru-light.png" alt="Café Arú">
+      <span class="admin-title">Backoffice</span>
+      <nav class="admin-nav-links">
+        <a href="index.html">Pedidos</a>
+        <a href="products.html" class="is-active">Productos</a>
+        <a href="shipping.html">Envíos</a>
+        <a href="coupons.html">Cupones</a>
+      </nav>
+    </div>
+    <div class="admin-header-actions">
+      <button id="logoutBtn" class="btn btn-primary btn-sm">Salir</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="container">
+
+    <div class="admin-panel" style="margin-bottom:1.4rem;">
+      <div class="admin-panel-head">
+        <h2 id="formTitle">Nuevo producto</h2>
+        <div class="admin-inline-actions">
+          <button id="cancelEditBtn" class="btn btn-ghost btn-sm" type="button" style="display:none;">Cancelar edición</button>
+        </div>
+      </div>
+      <form id="productForm" class="admin-form">
+        <input type="hidden" id="productId">
+        <div class="admin-form-grid">
+          <div class="admin-form-field span-2">
+            <label for="fName">Nombre</label>
+            <input id="fName" required>
+          </div>
+          <div class="admin-form-field">
+            <label for="fSlug">Slug (URL)</label>
+            <input id="fSlug" placeholder="se genera solo si lo dejas vacío">
+          </div>
+          <div class="admin-form-field">
+            <label for="fStatus">Estado</label>
+            <select id="fStatus">
+              <option value="active">Activo</option>
+              <option value="draft">Borrador</option>
+              <option value="archived">Archivado</option>
+            </select>
+          </div>
+          <div class="admin-form-field">
+            <label for="fPrice">Precio (COP)</label>
+            <input id="fPrice" type="number" min="1" step="1" required>
+          </div>
+          <div class="admin-form-field">
+            <label for="fStock">Stock</label>
+            <input id="fStock" type="number" min="0" step="1" required>
+          </div>
+          <div class="admin-form-field span-2">
+            <label for="fTags">Notas de sabor (separadas por coma)</label>
+            <input id="fTags" placeholder="Dulzura natural, Notas cítricas, Chocolate">
+          </div>
+          <div class="admin-form-field span-2">
+            <label for="fDescription">Descripción</label>
+            <textarea id="fDescription"></textarea>
+          </div>
+          <div class="admin-form-field span-2">
+            <label>Fotos</label>
+            <div id="thumbStrip" class="admin-thumb-strip">
+              <button type="button" id="addImageBtn" class="admin-thumb-add">+ Subir foto</button>
+            </div>
+            <span class="admin-form-hint" id="cloudinaryHint"></span>
+          </div>
+        </div>
+        <div class="admin-form-error" id="formError"></div>
+        <div class="admin-form-actions">
+          <button type="submit" class="btn btn-primary btn-sm" id="saveBtn">Guardar producto</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-panel">
+      <div class="admin-panel-head">
+        <h2>Productos</h2>
+        <button id="refreshBtn" class="btn btn-ghost btn-sm" type="button">Actualizar</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Nombre</th>
+              <th>Slug</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+        <div id="productsEmpty" class="admin-empty" style="display:none;">Todavía no hay productos.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="../js/admin-products.js"></script>
+</body>
+</html>

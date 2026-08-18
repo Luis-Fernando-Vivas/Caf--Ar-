@@ -25,6 +25,8 @@ const STATUS_BUCKET = {
 };
 const BUCKET_COLORS = { good: '#0ca30c', warning: '#fab219', critical: '#d03b3b' };
 
+const ENV_LABELS = { test: 'Prueba', prod: 'Producción' };
+
 function formatCOP(n){
   return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits:0 });
 }
@@ -136,8 +138,15 @@ function initLoginPage(){
 }
 
 /* ---------------- dashboard page ---------------- */
+// Los pedidos de Wompi en modo "Prueba" no son dinero real -- se excluyen de
+// ingresos y promedio para no inflar las cifras del negocio.
+function isRealMoney(o){
+  return !(o.channel === 'wompi' && o.environment === 'test');
+}
+
 function renderSummary(orders){
-  const paid = orders.filter(o => PAID_STATUSES.includes(o.status));
+  const real = orders.filter(isRealMoney);
+  const paid = real.filter(o => PAID_STATUSES.includes(o.status));
   const revenue = paid.reduce((sum, o) => sum + Number(o.amount_cop || 0), 0);
   const pending = orders.filter(o => o.status === 'pending' || o.status === 'whatsapp_pending');
   const avg = paid.length ? revenue / paid.length : 0;
@@ -165,7 +174,7 @@ function renderRevenueChart(orders){
   const byKey = new Map(buckets.map((b) => [b.key, b]));
 
   orders.forEach((o) => {
-    if (!PAID_STATUSES.includes(o.status)) return;
+    if (!PAID_STATUSES.includes(o.status) || !isRealMoney(o)) return;
     const bucket = byKey.get(String(o.created_at).slice(0, 10));
     if (bucket) bucket.value += Number(o.amount_cop || 0);
   });
@@ -400,6 +409,30 @@ function renderOrders(orders){
     const tdChannel = document.createElement('td');
     tdChannel.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
 
+    const tdEnv = document.createElement('td');
+    if (o.channel === 'wompi') {
+      const envBadge = document.createElement('span');
+      const env = o.environment === 'test' ? 'test' : 'prod';
+      envBadge.className = 'env-badge env-' + env;
+      envBadge.textContent = ENV_LABELS[env];
+      tdEnv.appendChild(envBadge);
+    } else {
+      tdEnv.textContent = '—';
+    }
+
+    const tdItems = document.createElement('td');
+    if (o.items && o.items.length) {
+      tdItems.textContent = o.items.map((it) => `${it.quantity}x ${it.product_name}`).join(', ');
+      const parts = [];
+      if (o.subtotal_cop) parts.push(`Subtotal: $${formatCOP(o.subtotal_cop)}`);
+      if (o.shipping_name) parts.push(`Envío (${o.shipping_name}): $${formatCOP(o.shipping_cop)}`);
+      if (o.coupon_code) parts.push(`Cupón ${o.coupon_code}: -$${formatCOP(o.discount_cop)}`);
+      tdItems.title = parts.join(' · ');
+    } else {
+      tdItems.textContent = '—';
+      tdItems.title = 'Pedido registrado antes de tener catálogo de productos.';
+    }
+
     const tdStatus = document.createElement('td');
     const badge = document.createElement('span');
     badge.className = 'status-badge st-' + o.status;
@@ -428,7 +461,7 @@ function renderOrders(orders){
     select.addEventListener('change', () => updateStatus(o.id, select.value, select));
     tdAction.appendChild(select);
 
-    tr.append(tdRef, tdChannel, tdStatus, tdQty, tdAmount, tdDate, tdAction);
+    tr.append(tdRef, tdChannel, tdEnv, tdItems, tdStatus, tdQty, tdAmount, tdDate, tdAction);
     tbody.appendChild(tr);
   });
 }
@@ -473,13 +506,81 @@ async function loadOrders(){
   renderCharts(orders);
 }
 
+/* ---------------- entorno de Wompi (prueba / producción) ---------------- */
+function renderWompiEnv(environment, configured){
+  const switchEl = document.getElementById('wompiEnvSwitch');
+  const banner = document.getElementById('wompiEnvBanner');
+  if (!switchEl || !banner) return;
+
+  switchEl.querySelectorAll('.wompi-env-opt').forEach((btn) => {
+    const env = btn.dataset.env;
+    btn.classList.toggle('is-active', env === environment);
+    btn.disabled = !configured[env];
+    btn.title = configured[env] ? '' : `Faltan las llaves de Wompi para "${ENV_LABELS[env]}" en las variables de entorno.`;
+  });
+
+  banner.style.display = 'flex';
+  banner.className = 'wompi-env-banner env-' + environment;
+  banner.textContent = environment === 'prod'
+    ? '● Modo Producción: los checkouts de Wompi cobran dinero real.'
+    : '● Modo Prueba: los checkouts de Wompi usan el sandbox, no se cobra dinero real.';
+}
+
+async function loadWompiEnv(){
+  const res = await fetch('/api/admin/wompi-env');
+  if (res.status === 401) {
+    window.location.href = 'login.html';
+    return;
+  }
+  if (!res.ok) return;
+  const { environment, configured } = await res.json();
+  renderWompiEnv(environment, configured);
+}
+
+function initWompiEnvSwitch(){
+  const switchEl = document.getElementById('wompiEnvSwitch');
+  if (!switchEl) return;
+
+  switchEl.querySelectorAll('.wompi-env-opt').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const env = btn.dataset.env;
+      if (btn.classList.contains('is-active') || btn.disabled) return;
+      if (env === 'prod' && !confirm('¿Cambiar Wompi a modo Producción? A partir de ahora los checkouts van a cobrar dinero real.')) {
+        return;
+      }
+
+      switchEl.querySelectorAll('.wompi-env-opt').forEach((b) => { b.disabled = true; });
+      try {
+        const res = await fetch('/api/admin/wompi-env', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ environment: env }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderWompiEnv(data.environment, data.configured);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || 'No se pudo cambiar el entorno de Wompi.');
+          await loadWompiEnv();
+        }
+      } catch {
+        alert('No se pudo conectar con el servidor.');
+        await loadWompiEnv();
+      }
+    });
+  });
+}
+
 function initDashboardPage(){
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;
 
   loadOrders();
+  loadWompiEnv();
+  initWompiEnvSwitch();
 
-  document.getElementById('refreshBtn')?.addEventListener('click', loadOrders);
+  document.getElementById('refreshBtn')?.addEventListener('click', () => { loadOrders(); loadWompiEnv(); });
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
     window.location.href = 'login.html';

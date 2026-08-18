@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Sitio de Café Arú (estático) + funciones serverless (Vercel): checkout Wompi y backoffice de pedidos.",
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "dev:local": "node --env-file=.env dev-server.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0"

@@ -16,8 +16,18 @@
     <div class="admin-header-left">
       <img src="../img/logo-cafe-aru-light.png" alt="Café Arú">
       <span class="admin-title">Backoffice</span>
+      <nav class="admin-nav-links">
+        <a href="index.html" class="is-active">Pedidos</a>
+        <a href="products.html">Productos</a>
+        <a href="shipping.html">Envíos</a>
+        <a href="coupons.html">Cupones</a>
+      </nav>
     </div>
     <div class="admin-header-actions">
+      <div id="wompiEnvSwitch" class="wompi-env-switch" role="group" aria-label="Entorno de Wompi">
+        <button type="button" class="wompi-env-opt" data-env="test">Prueba</button>
+        <button type="button" class="wompi-env-opt" data-env="prod">Producción</button>
+      </div>
       <button id="refreshBtn" class="btn btn-ghost-light btn-sm">Actualizar</button>
       <button id="logoutBtn" class="btn btn-primary btn-sm">Salir</button>
     </div>
@@ -26,6 +36,8 @@
 
 <main class="admin-main">
   <div class="container">
+
+    <div id="wompiEnvBanner" class="wompi-env-banner" style="display:none;"></div>
 
     <div class="admin-stats">
       <div class="admin-stat-card"><span>Pedidos totales</span><strong id="statTotal">—</strong></div>
@@ -66,6 +78,8 @@
             <tr>
               <th>Referencia</th>
               <th>Canal</th>
+              <th>Entorno</th>
+              <th>Productos</th>
               <th>Estado</th>
               <th>Cant.</th>
               <th>Monto</th>

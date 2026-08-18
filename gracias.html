@@ -62,8 +62,14 @@
   </div>
 </div>
 
+<script src="js/cart.js"></script>
 <script>
 (function(){
+  // Si el cliente llegó hasta aquí es porque el pedido ya se creó en /api/checkout
+  // (independientemente de si Wompi terminó aprobando o no el pago), así que el
+  // carrito ya cumplió su función y no debe seguir mostrando estos artículos.
+  Cart.clear();
+
   const icon = document.getElementById('statusIcon');
   const title = document.getElementById('statusTitle');
   const text = document.getElementById('statusText');

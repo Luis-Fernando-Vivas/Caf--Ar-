@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envíos — Backoffice Café Arú</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../img/logo-cafe-aru.png">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-header-left">
+      <img src="../img/logo-cafe-aru-light.png" alt="Café Arú">
+      <span class="admin-title">Backoffice</span>
+      <nav class="admin-nav-links">
+        <a href="index.html">Pedidos</a>
+        <a href="products.html">Productos</a>
+        <a href="shipping.html" class="is-active">Envíos</a>
+        <a href="coupons.html">Cupones</a>
+      </nav>
+    </div>
+    <div class="admin-header-actions">
+      <button id="logoutBtn" class="btn btn-primary btn-sm">Salir</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="container">
+
+    <div class="admin-panel" style="margin-bottom:1.4rem;">
+      <div class="admin-panel-head"><h2>Nueva tarifa de envío</h2></div>
+      <form id="rateForm" class="admin-form">
+        <div class="admin-form-grid">
+          <div class="admin-form-field span-2">
+            <label for="fName">Nombre</label>
+            <input id="fName" placeholder="Envío nacional, Recogida en finca..." required>
+          </div>
+          <div class="admin-form-field">
+            <label for="fAmount">Costo (COP)</label>
+            <input id="fAmount" type="number" min="0" step="1" required>
+          </div>
+        </div>
+        <div class="admin-form-error" id="formError"></div>
+        <div class="admin-form-actions">
+          <button type="submit" class="btn btn-primary btn-sm">Agregar tarifa</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-panel">
+      <div class="admin-panel-head">
+        <h2>Tarifas de envío</h2>
+        <button id="refreshBtn" class="btn btn-ghost btn-sm" type="button">Actualizar</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Nombre</th><th>Costo</th><th>Activa</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="ratesBody"></tbody>
+        </table>
+        <div id="ratesEmpty" class="admin-empty" style="display:none;">Todavía no hay tarifas de envío.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="../js/admin-shipping.js"></script>
+</body>
+</html>

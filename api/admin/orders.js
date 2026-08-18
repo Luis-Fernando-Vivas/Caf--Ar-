@@ -35,11 +35,25 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const rows = await sql`
         SELECT id, reference, channel, status, quantity, unit_price_cop, amount_cop,
-               wompi_transaction_id, created_at, updated_at
+               wompi_transaction_id, environment, shipping_name, shipping_cop,
+               coupon_code, discount_cop, subtotal_cop, created_at, updated_at
         FROM orders
         ORDER BY created_at DESC
         LIMIT 300
       `;
+
+      const ids = rows.map((r) => r.id);
+      const items = ids.length
+        ? await sql`SELECT order_id, product_id, product_name, unit_price_cop, quantity, line_total_cop
+                     FROM order_items WHERE order_id = ANY(${ids})`
+        : [];
+      const itemsByOrder = new Map();
+      for (const it of items) {
+        if (!itemsByOrder.has(it.order_id)) itemsByOrder.set(it.order_id, []);
+        itemsByOrder.get(it.order_id).push(it);
+      }
+      rows.forEach((r) => { r.items = itemsByOrder.get(r.id) || []; });
+
       res.status(200).json({ orders: rows });
       return;
     }

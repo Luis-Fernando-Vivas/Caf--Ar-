@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Café Arú Honey 500g — Comprar | Café Arú</title>
-<meta name="description" content="Compra Café Arú Honey 500g: café colombiano de proceso especial, notas de dulzura, cítricos, chocolate y frutos secos. $50.000 COP.">
+<title id="pageTitle">Producto — Café Arú</title>
+<meta name="description" id="pageDescription" content="Café Arú: café colombiano de producción familiar y artesanal en Palermo, Huila.">
 <link rel="icon" href="img/logo-cafe-aru.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -21,15 +21,15 @@
     </a>
     <nav class="main-nav">
       <a href="index.html">Inicio</a>
-      <a href="producto.html">Producto</a>
+      <a href="tienda.html">Tienda</a>
       <a href="nosotros.html">Nosotros</a>
       <a href="galeria.html">Galería</a>
     </nav>
     <div class="header-actions">
-      <button class="btn btn-primary btn-sm" data-buy-one data-magnetic>
-        Comprar
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-      </button>
+      <a href="carrito.html" class="cart-link" data-cursor-hover aria-label="Carrito">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+        <span class="cart-badge" data-cart-count style="display:none;">0</span>
+      </a>
       <button class="burger" aria-label="Abrir menú"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -37,64 +37,48 @@
 
 <nav class="mobile-nav">
   <a href="index.html">Inicio</a>
-  <a href="producto.html">Producto</a>
+  <a href="tienda.html">Tienda</a>
   <a href="nosotros.html">Nosotros</a>
   <a href="galeria.html">Galería</a>
 </nav>
 
 <section class="page-hero">
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">Inicio</a> / Producto</div>
-    <h1 data-reveal>Café Arú Honey</h1>
-    <p class="lead" data-reveal style="transition-delay:.1s">Nuestro único café: cuidado desde la flor hasta la taza.</p>
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / <a href="tienda.html">Tienda</a> / <span id="crumbName">Producto</span></div>
+    <h1 data-reveal id="heroName">Café Arú</h1>
+    <p class="lead" data-reveal style="transition-delay:.1s">Cuidado desde la flor hasta la taza.</p>
   </div>
 </section>
 
 <section class="section" style="padding-top:4rem;">
   <div class="container">
-    <div class="product-main">
+    <div id="productLoading" style="text-align:center; padding:3rem 0; color:var(--c-text-soft);">Cargando producto…</div>
+    <div id="productNotFound" style="display:none; text-align:center; padding:3rem 0;">
+      <p class="lead">No encontramos ese producto.</p>
+      <a href="tienda.html" class="btn btn-primary btn-sm">Ver la tienda</a>
+    </div>
+
+    <div class="product-main" id="productMain" style="display:none;">
 
       <div class="product-gallery" data-reveal="left">
         <div class="product-gallery-main">
-          <img src="img/producto-bolsa-500g.png" alt="Café Arú Honey 500g" data-gallery-main>
+          <img src="img/producto-bolsa-500g.png" alt="" id="galleryMain" data-gallery-main>
         </div>
-        <div class="product-thumbs">
-          <button class="active" data-gallery-thumb="img/producto-bolsa-500g.png"><img src="img/producto-bolsa-500g.png" alt="Bolsa 500g"></button>
-          <button data-gallery-thumb="img/cerezas-cosecha.jpg"><img src="img/cerezas-cosecha.jpg" alt="Cerezas recién cosechadas"></button>
-          <button data-gallery-thumb="img/proceso-secado.jpg"><img src="img/proceso-secado.jpg" alt="Secado del café"></button>
-          <button data-gallery-thumb="img/finca-paisaje.jpg"><img src="img/finca-paisaje.jpg" alt="Finca cafetera en Huila"></button>
-        </div>
+        <div class="product-thumbs" id="productThumbs"></div>
       </div>
 
       <div class="product-info" data-reveal="right">
         <span class="eyebrow">Café Arú · Palermo, Huila</span>
-        <h1>Café Arú Honey — 500g</h1>
-        <div class="stars">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.1 6.6 7.2.8-5.3 5 1.5 7.2L12 18l-6.5 3.6 1.5-7.2-5.3-5 7.2-.8z"/></svg>
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.1 6.6 7.2.8-5.3 5 1.5 7.2L12 18l-6.5 3.6 1.5-7.2-5.3-5 7.2-.8z"/></svg>
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.1 6.6 7.2.8-5.3 5 1.5 7.2L12 18l-6.5 3.6 1.5-7.2-5.3-5 7.2-.8z"/></svg>
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.1 6.6 7.2.8-5.3 5 1.5 7.2L12 18l-6.5 3.6 1.5-7.2-5.3-5 7.2-.8z"/></svg>
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.1 6.6 7.2.8-5.3 5 1.5 7.2L12 18l-6.5 3.6 1.5-7.2-5.3-5 7.2-.8z"/></svg>
-          <span>3er puesto · Concurso de Calidad</span>
-        </div>
+        <h1 id="prodName">Café Arú</h1>
 
         <div class="price-row">
-          <span class="price">$50.000</span>
-          <span class="unit">COP / bolsa de 500g</span>
+          <span class="price" id="prodPrice">$0</span>
+          <span class="unit" id="prodStockNote">COP</span>
         </div>
 
-        <p class="product-desc">
-          Café de proceso Honey: el grano se seca con su propio mucílago, concentrando dulzura y complejidad.
-          Cultivado y beneficiado por nuestra familia en las montañas de Palermo, Huila, con prácticas de
-          reconversión productiva y mínimo uso de agua.
-        </p>
+        <p class="product-desc" id="prodDesc"></p>
 
-        <div class="flavor-tags">
-          <span>Dulzura natural</span>
-          <span>Notas cítricas</span>
-          <span>Chocolate</span>
-          <span>Frutos secos</span>
-        </div>
+        <div class="flavor-tags" id="prodTags"></div>
 
         <div class="buy-box">
           <div class="qty-row">
@@ -107,15 +91,18 @@
           </div>
           <div class="qty-row total-row">
             <span>Total</span>
-            <strong data-total>$50.000 COP</strong>
+            <strong data-total>$0 COP</strong>
           </div>
-          <button class="btn btn-primary" data-buy data-magnetic>
-            Comprar ahora
+          <button class="btn btn-primary" id="addToCartBtn" data-magnetic>
+            Añadir al carrito
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+          <button class="btn btn-ghost" id="buyNowBtn" data-magnetic style="margin-top:.6rem;">
+            Comprar ahora
           </button>
           <div class="buy-note">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.4L3 20l1.2-5.3A8.5 8.5 0 1 1 21 11.5Z"/></svg>
-            Coordinamos pago y envío directamente contigo por WhatsApp.
+            Envío a toda Colombia. Coordinamos los detalles al finalizar tu compra.
           </div>
         </div>
 
@@ -130,35 +117,21 @@
 </section>
 
 <!-- ============ TABS ============ -->
-<section class="section" style="padding-top:0;">
+<section class="section" style="padding-top:0;" id="tabsSection">
   <div class="container">
     <div class="tabs-nav" data-reveal>
       <button class="active" data-tab="desc">Descripción</button>
-      <button data-tab="perfil">Perfil de sabor</button>
       <button data-tab="prep">Preparación</button>
     </div>
 
     <div class="tab-panel active" data-tab-panel="desc">
-      <p class="lead" style="margin-bottom:1.4rem;">
-        Café Arú Honey nace de una finca familiar en Palermo, Huila. El proceso Honey consiste en secar el grano
-        con parte de su mucílago —la capa dulce que envuelve la semilla— en lugar de lavarlo por completo.
-        Este método concentra azúcares naturales y reduce drásticamente el uso de agua frente al proceso lavado tradicional.
+      <p class="lead" style="margin-bottom:1.4rem;" id="tabDescLong">
+        Café Arú nace de una finca familiar en Palermo, Huila, con prácticas de producción artesanal y
+        mínimo impacto ambiental.
       </p>
       <ul>
         <li><strong>Origen</strong> Palermo, Huila — Colombia</li>
-        <li><strong>Proceso</strong> Honey (secado con mucílago)</li>
-        <li><strong>Presentación</strong> Bolsa de 500g</li>
         <li><strong>Producción</strong> Familiar y artesanal</li>
-      </ul>
-    </div>
-
-    <div class="tab-panel" data-tab-panel="perfil">
-      <p class="lead" style="margin-bottom:1.4rem;">Un perfil dulce y complejo, resultado directo del proceso Honey.</p>
-      <ul>
-        <li><strong>Dulzura</strong> Alta, por el mucílago residual</li>
-        <li><strong>Acidez</strong> Cítrica, brillante</li>
-        <li><strong>Cuerpo</strong> Medio</li>
-        <li><strong>Notas</strong> Chocolate y frutos secos</li>
       </ul>
     </div>
 
@@ -179,7 +152,7 @@
   <div class="container split reverse">
     <div class="split-media" data-reveal="right">
       <img src="img/proceso-secado.jpg" alt="Secado del café tipo Honey al sol">
-      <span class="tag">Secado Honey</span>
+      <span class="tag">Proceso Honey</span>
     </div>
     <div class="split-body" data-reveal="left">
       <span class="eyebrow" style="color:var(--c-kraft-light);">¿Por qué Honey?</span>
@@ -197,12 +170,12 @@
 <section class="section">
   <div class="container">
     <div class="cta-banner" data-reveal="scale">
-      <h2>¿Listo para tu Café Arú?</h2>
-      <p class="lead">Bolsa de 500g, $50.000 COP. Pedido rápido por WhatsApp.</p>
-      <button class="btn btn-dark" data-buy-one data-magnetic>
-        Comprar ahora
+      <h2>¿Quieres ver más opciones?</h2>
+      <p class="lead">Descubre el resto de nuestros cafés en la tienda.</p>
+      <a href="tienda.html" class="btn btn-dark" data-magnetic>
+        Ver tienda
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-      </button>
+      </a>
     </div>
   </div>
 </section>
@@ -226,7 +199,7 @@
         <h4>Navegación</h4>
         <ul>
           <li><a href="index.html">Inicio</a></li>
-          <li><a href="producto.html">Producto</a></li>
+          <li><a href="tienda.html">Tienda</a></li>
           <li><a href="nosotros.html">Nosotros</a></li>
           <li><a href="galeria.html">Galería</a></li>
         </ul>
@@ -257,16 +230,18 @@
 <div class="sticky-buy">
   <div class="container">
     <div class="sticky-buy-info">
-      <img src="img/producto-bolsa-500g.png" alt="Café Arú">
+      <img src="img/producto-bolsa-500g.png" alt="Café Arú" id="stickyImg">
       <div>
-        <strong>Café Arú Honey 500g</strong>
-        <span>$50.000 COP</span>
+        <strong id="stickyName">Café Arú</strong>
+        <span id="stickyPrice">$0</span>
       </div>
     </div>
-    <button class="btn btn-primary btn-sm" data-buy-one data-magnetic>Comprar</button>
+    <button class="btn btn-primary btn-sm" id="stickyAddBtn" data-magnetic>Añadir</button>
   </div>
 </div>
 
 <script src="js/main.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/producto.js"></script>
 </body>
 </html>

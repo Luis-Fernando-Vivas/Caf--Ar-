@@ -3,81 +3,14 @@
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
-   CONFIGURACIÓN DE COMPRA
-   Orden en el que el botón "Comprar" intenta cobrar:
-     1) PAYMENT_LINK, si lo pegaste aquí manualmente (siempre gana).
-     2) Wompi Web Checkout, vía la función serverless api/wompi-signature.js
-        (Vercel) -- funciona automáticamente en cuanto configures
-        WOMPI_PUBLIC_KEY y WOMPI_INTEGRITY_SECRET en Vercel. No hay que
-        tocar este archivo.
-     3) Si ninguna de las dos está lista, arma el pedido por WhatsApp,
-        para no perder ventas mientras tanto.
+   El checkout ahora es un carrito real (ver js/cart.js + carrito.html +
+   api/checkout.js). Este archivo se quedó solo con el comportamiento
+   genérico del sitio (nav, animaciones, galería, tabs, lightbox); la lógica
+   de compra específica de cada página vive en js/tienda.js / js/producto.js.
 --------------------------------------------------------------------- */
-const CHECKOUT_CONFIG = {
-  PAYMENT_LINK: "", // <-- pega aquí un link de pago fijo si quieres saltarte Wompi
-  WOMPI_SIGNATURE_ENDPOINT: "/api/wompi-signature",
-  WHATSAPP_NUMBER: "573208022813",
-  PRODUCT_NAME: "Café Arú Honey 500g",
-  UNIT_PRICE: 50000,
-};
 
 function formatCOP(n){
   return n.toLocaleString('es-CO', { maximumFractionDigits:0 });
-}
-
-function whatsAppCheckout(qty){
-  // Registra el pedido en el backoffice para que quede visible en /admin, sin bloquear
-  // ni depender de que esto funcione -- si falla, el cliente igual debe poder escribir.
-  fetch('/api/orders/whatsapp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ quantity: qty }),
-  }).catch(() => {});
-
-  const total = qty * CHECKOUT_CONFIG.UNIT_PRICE;
-  const msg = `Hola Café Arú! Quiero pedir ${qty} bolsa(s) de ${CHECKOUT_CONFIG.PRODUCT_NAME}.\nTotal estimado: $${formatCOP(total)} COP.\n¿Me ayudan a confirmar el pedido y el envío?`;
-  const url = `https://wa.me/${CHECKOUT_CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank', 'noopener');
-}
-
-async function payWithWompi(qty){
-  const res = await fetch(CHECKOUT_CONFIG.WOMPI_SIGNATURE_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ quantity: qty }),
-  });
-  if (!res.ok) throw new Error('wompi-not-ready');
-  const data = await res.json();
-
-  const redirectUrl = `${location.origin}/gracias.html`;
-  const params = new URLSearchParams({
-    'public-key': data.publicKey,
-    currency: data.currency,
-    'amount-in-cents': String(data.amountInCents),
-    reference: data.reference,
-    'signature:integrity': data.signature,
-    'redirect-url': redirectUrl,
-  });
-  window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
-}
-
-async function goToCheckout(qty = 1, btn = null){
-  qty = Math.max(1, qty | 0);
-
-  if (CHECKOUT_CONFIG.PAYMENT_LINK) {
-    window.open(CHECKOUT_CONFIG.PAYMENT_LINK, '_blank', 'noopener');
-    return;
-  }
-
-  const originalLabel = btn ? btn.innerHTML : null;
-  if (btn) { btn.disabled = true; btn.style.opacity = '.7'; }
-
-  try {
-    await payWithWompi(qty); // on success this navigates away, so nothing else runs
-  } catch (err) {
-    if (btn) { btn.disabled = false; btn.style.opacity = ''; if (originalLabel !== null) btn.innerHTML = originalLabel; }
-    whatsAppCheckout(qty);
-  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -186,29 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold:0 });
     io2.observe(buyBoxRef);
   }
-
-  /* ---------------- quantity stepper + buy buttons ---------------- */
-  const qtyDisplay = document.querySelector('[data-qty]');
-  const totalDisplay = document.querySelector('[data-total]');
-  let qty = 1;
-  function renderQty(){
-    if (qtyDisplay) qtyDisplay.textContent = qty;
-    if (totalDisplay) totalDisplay.textContent = '$' + formatCOP(qty * CHECKOUT_CONFIG.UNIT_PRICE) + ' COP';
-  }
-  document.querySelectorAll('[data-qty-decrease]').forEach(btn => btn.addEventListener('click', () => {
-    qty = Math.max(1, qty - 1); renderQty();
-  }));
-  document.querySelectorAll('[data-qty-increase]').forEach(btn => btn.addEventListener('click', () => {
-    qty = Math.min(20, qty + 1); renderQty();
-  }));
-  renderQty();
-
-  document.querySelectorAll('[data-buy]').forEach(btn => {
-    btn.addEventListener('click', () => goToCheckout(qty, btn));
-  });
-  document.querySelectorAll('[data-buy-one]').forEach(btn => {
-    btn.addEventListener('click', () => goToCheckout(1, btn));
-  });
 
   /* ---------------- product image gallery ---------------- */
   const mainImg = document.querySelector('[data-gallery-main]');

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cupones — Backoffice Café Arú</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../img/logo-cafe-aru.png">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-header-left">
+      <img src="../img/logo-cafe-aru-light.png" alt="Café Arú">
+      <span class="admin-title">Backoffice</span>
+      <nav class="admin-nav-links">
+        <a href="index.html">Pedidos</a>
+        <a href="products.html">Productos</a>
+        <a href="shipping.html">Envíos</a>
+        <a href="coupons.html" class="is-active">Cupones</a>
+      </nav>
+    </div>
+    <div class="admin-header-actions">
+      <button id="logoutBtn" class="btn btn-primary btn-sm">Salir</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="container">
+
+    <div class="admin-panel" style="margin-bottom:1.4rem;">
+      <div class="admin-panel-head"><h2>Nuevo cupón</h2></div>
+      <form id="couponForm" class="admin-form">
+        <div class="admin-form-grid">
+          <div class="admin-form-field">
+            <label for="fCode">Código</label>
+            <input id="fCode" placeholder="ARUFAMILIA10" required>
+          </div>
+          <div class="admin-form-field">
+            <label for="fType">Tipo</label>
+            <select id="fType">
+              <option value="percent">Porcentaje (%)</option>
+              <option value="fixed">Monto fijo (COP)</option>
+            </select>
+          </div>
+          <div class="admin-form-field">
+            <label for="fValue">Valor</label>
+            <input id="fValue" type="number" min="1" step="1" required>
+          </div>
+          <div class="admin-form-field">
+            <label for="fMinOrder">Pedido mínimo (COP)</label>
+            <input id="fMinOrder" type="number" min="0" step="1" value="0">
+          </div>
+          <div class="admin-form-field">
+            <label for="fLimit">Límite de usos (vacío = ilimitado)</label>
+            <input id="fLimit" type="number" min="1" step="1">
+          </div>
+          <div class="admin-form-field">
+            <label for="fExpires">Expira (vacío = nunca)</label>
+            <input id="fExpires" type="date">
+          </div>
+        </div>
+        <div class="admin-form-error" id="formError"></div>
+        <div class="admin-form-actions">
+          <button type="submit" class="btn btn-primary btn-sm">Crear cupón</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-panel">
+      <div class="admin-panel-head">
+        <h2>Cupones</h2>
+        <button id="refreshBtn" class="btn btn-ghost btn-sm" type="button">Actualizar</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Código</th><th>Tipo</th><th>Valor</th><th>Mín. pedido</th>
+              <th>Usos</th><th>Expira</th><th>Activo</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="couponsBody"></tbody>
+        </table>
+        <div id="couponsEmpty" class="admin-empty" style="display:none;">Todavía no hay cupones.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="../js/admin-coupons.js"></script>
+</body>
+</html>

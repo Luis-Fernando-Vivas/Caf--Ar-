@@ -4,7 +4,8 @@
 // Configúralo en el dashboard de Wompi -> Configuración -> Eventos, apuntando a:
 //   https://tu-sitio.vercel.app/api/webhooks/wompi
 // y copia el "Secreto de eventos" (distinto de la llave de integridad) en la
-// variable de entorno WOMPI_EVENTS_SECRET.
+// variable de entorno WOMPI_EVENTS_SECRET_TEST (sandbox) o WOMPI_EVENTS_SECRET_PROD
+// (producción) -- cada entorno de Wompi tiene su propio secreto de eventos.
 //
 // Nota: la forma exacta del payload (nombres de propiedades en signature.properties,
 // etc.) está implementada según la documentación pública de Wompi al momento de
@@ -14,6 +15,7 @@
 
 const crypto = require('crypto');
 const { sql, ensureSchema } = require('../../lib/db');
+const { getWompiEnvironment, getWompiKeys } = require('../../lib/wompi-env');
 
 function resolvePath(obj, path) {
   return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
@@ -25,9 +27,13 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const eventsSecret = process.env.WOMPI_EVENTS_SECRET;
+  // El webhook se verifica contra el secreto del entorno activo en el backoffice:
+  // los eventos de Wompi solo pueden venir del mismo entorno (sandbox o real) que
+  // se está usando para generar los checkouts.
+  const environment = await getWompiEnvironment();
+  const { eventsSecret } = getWompiKeys(environment);
   if (!eventsSecret) {
-    console.error('Falta WOMPI_EVENTS_SECRET: no se puede verificar el webhook de Wompi.');
+    console.error(`Falta el secreto de eventos de Wompi para el entorno "${environment}".`);
     res.status(503).json({ error: 'webhook_not_configured' });
     return;
   }

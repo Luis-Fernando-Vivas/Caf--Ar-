@@ -36,7 +36,43 @@
 .admin-header-left{ display:flex; align-items:center; }
 .admin-header-actions{ display:flex; gap:.7rem; align-items:center; }
 
+.admin-nav-links{ display:flex; gap:.3rem; margin-left:1.6rem; }
+.admin-nav-links a{
+  color:rgba(248,242,228,.7); text-decoration:none; font-size:.85rem; font-weight:600;
+  padding:.5em .9em; border-radius:100px; transition:background .15s ease, color .15s ease;
+}
+.admin-nav-links a:hover{ background:rgba(255,255,255,.08); color:var(--c-cream); }
+.admin-nav-links a.is-active{ background:var(--c-red); color:var(--c-white); }
+@media (max-width:900px){ .admin-nav-links{ display:none; } }
+
 .admin-main{ padding:2.2rem 0 4rem; }
+
+/* ---------- entorno de Wompi ---------- */
+.wompi-env-switch{
+  display:inline-flex; background:rgba(255,255,255,.1); border-radius:100px; padding:3px; gap:2px;
+}
+.wompi-env-opt{
+  border:none; background:transparent; color:var(--c-cream); font-family:inherit; font-size:.78rem;
+  font-weight:600; padding:.4em .9em; border-radius:100px; cursor:pointer; transition:background .15s ease, color .15s ease;
+}
+.wompi-env-opt:hover{ background:rgba(255,255,255,.12); }
+.wompi-env-opt.is-active[data-env="test"]{ background:var(--c-kraft-dark); color:var(--c-black); }
+.wompi-env-opt.is-active[data-env="prod"]{ background:var(--c-red); color:var(--c-white); }
+.wompi-env-opt:disabled{ opacity:.5; cursor:default; }
+
+.wompi-env-banner{
+  border-radius:12px; padding:.8rem 1.1rem; margin-bottom:1.2rem; font-size:.85rem; font-weight:600;
+  display:flex; align-items:center; gap:.6em;
+}
+.wompi-env-banner.env-test{ background:rgba(255,205,53,.18); color:var(--c-kraft-dark); }
+.wompi-env-banner.env-prod{ background:rgba(179,32,39,.1); color:var(--c-red); }
+
+.env-badge{
+  display:inline-flex; align-items:center; padding:.3em .7em; border-radius:100px; font-size:.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.03em;
+}
+.env-badge.env-test{ background:rgba(255,205,53,.2); color:var(--c-kraft-dark); }
+.env-badge.env-prod{ background:rgba(179,32,39,.12); color:var(--c-red); }
 
 /* ---------- stat cards ---------- */
 .admin-stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.4rem; }
@@ -122,3 +158,58 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.87rem; min-w
 .status-badge.st-declined, .status-badge.st-cancelled, .status-badge.st-voided{ background:rgba(179,32,39,.12); color:var(--c-red); }
 
 .admin-empty{ padding:3rem 1.5rem; text-align:center; color:var(--c-text-soft); }
+
+/* ---------- formularios de admin (productos, envíos, cupones) ---------- */
+.admin-panel-head{ flex-wrap:wrap; gap:.6rem; }
+
+.admin-form{ padding:1.4rem 1.5rem; border-bottom:1px solid rgba(36,27,18,.08); }
+.admin-form-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem 1.2rem; }
+.admin-form-field{ display:flex; flex-direction:column; gap:.35rem; }
+.admin-form-field.span-2{ grid-column:span 2; }
+@media (max-width:640px){ .admin-form-field.span-2{ grid-column:span 1; } }
+.admin-form-field label{ font-size:.78rem; font-weight:600; color:var(--c-text-soft); }
+.admin-form-field input, .admin-form-field select, .admin-form-field textarea{
+  padding:.65em .85em; border-radius:8px; border:1px solid rgba(36,27,18,.18);
+  font-family:inherit; font-size:.9rem; background:var(--c-cream); color:var(--c-text);
+}
+.admin-form-field textarea{ resize:vertical; min-height:5rem; }
+.admin-form-hint{ font-size:.74rem; color:var(--c-text-soft); }
+.admin-form-actions{ display:flex; gap:.7rem; align-items:center; margin-top:1.2rem; }
+.admin-form-error{ color:var(--c-red); font-size:.82rem; margin-top:.8rem; min-height:1.2em; }
+
+.admin-thumb-strip{ display:flex; flex-wrap:wrap; gap:.6rem; margin-top:.5rem; }
+.admin-thumb{
+  position:relative; width:74px; height:74px; border-radius:10px; overflow:hidden;
+  border:1px solid rgba(36,27,18,.15); flex-shrink:0;
+}
+.admin-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.admin-thumb.is-cover::after{
+  content:"Portada"; position:absolute; left:0; right:0; bottom:0; padding:.15em 0;
+  font-size:.6rem; text-align:center; background:var(--c-red); color:var(--c-white);
+}
+.admin-thumb-actions{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:.3rem;
+  background:rgba(23,17,12,.55); opacity:0; transition:opacity .15s ease;
+}
+.admin-thumb:hover .admin-thumb-actions{ opacity:1; }
+.admin-thumb-actions button{
+  border:none; background:var(--c-white); color:var(--c-black); font-size:.65rem; font-weight:700;
+  padding:.25em .5em; border-radius:6px; cursor:pointer;
+}
+.admin-thumb-add{
+  width:74px; height:74px; border-radius:10px; border:1px dashed rgba(36,27,18,.3);
+  background:transparent; color:var(--c-text-soft); font-size:.75rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+}
+.admin-thumb-add:hover{ border-color:var(--c-red); color:var(--c-red); }
+.admin-thumb-add:disabled{ opacity:.5; cursor:default; }
+
+.admin-inline-actions{ display:flex; gap:.5rem; }
+.admin-inline-actions button{
+  border:none; background:transparent; color:var(--c-text-soft); font-size:.78rem; font-weight:600;
+  cursor:pointer; padding:.3em .5em; border-radius:6px;
+}
+.admin-inline-actions button:hover{ background:var(--c-cream); color:var(--c-text); }
+.admin-inline-actions button.danger:hover{ color:var(--c-red); }
+
+.admin-table img.admin-row-thumb{ width:42px; height:42px; object-fit:cover; border-radius:8px; vertical-align:middle; }
