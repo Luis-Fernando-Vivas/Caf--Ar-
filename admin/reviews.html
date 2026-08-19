@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reseñas — Backoffice Café Arú</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../img/logo-cafe-aru.png">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+<header class="admin-header">
+  <div class="container">
+    <div class="admin-header-left">
+      <img src="../img/logo-cafe-aru-light.png" alt="Café Arú">
+      <span class="admin-title">Backoffice</span>
+      <nav class="admin-nav-links">
+        <a href="/admin">Pedidos</a>
+        <a href="/admin/products">Productos</a>
+        <a href="/admin/shipping">Envíos</a>
+        <a href="/admin/coupons">Cupones</a>
+        <a href="/admin/reviews" class="is-active">Reseñas</a>
+      </nav>
+    </div>
+    <div class="admin-header-actions">
+      <button id="logoutBtn" class="btn btn-primary btn-sm">Salir</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="container">
+
+    <div class="admin-panel">
+      <div class="admin-panel-head">
+        <h2>Reseñas de productos</h2>
+        <button id="refreshBtn" class="btn btn-ghost btn-sm" type="button">Actualizar</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Producto</th><th>Cliente</th><th>Estrellas</th><th>Comentario</th>
+              <th>Fecha</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="reviewsBody"></tbody>
+        </table>
+        <div id="reviewsEmpty" class="admin-empty" style="display:none;">Todavía no hay reseñas.</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="../js/admin-reviews.js"></script>
+</body>
+</html>

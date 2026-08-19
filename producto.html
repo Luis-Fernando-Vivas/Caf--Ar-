@@ -69,6 +69,10 @@
 
       <div class="product-info" data-reveal="right">
         <span class="eyebrow">Café Arú · Palermo, Huila</span>
+        <a href="#reviewsSection" class="reviews-mini" id="reviewsMini" style="display:none;">
+          <span class="reviews-mini-stars" id="reviewsMiniStars"></span>
+          <span id="reviewsMiniCount"></span>
+        </a>
         <h1 id="prodName">Café Arú</h1>
 
         <span class="launch-badge" id="launchBadge" style="display:none;">Precio de lanzamiento</span>
@@ -106,17 +110,30 @@
           <button class="btn btn-ghost" id="buyNowBtn" data-magnetic style="margin-top:.6rem;">
             Comprar ahora
           </button>
-          <div class="buy-note">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.4L3 20l1.2-5.3A8.5 8.5 0 1 1 21 11.5Z"/></svg>
-            Envío a toda Colombia. Coordinamos los detalles al finalizar tu compra.
-          </div>
         </div>
 
         <div class="trust-row">
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg> Origen garantizado</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> Tueste reciente</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg> Producción familiar</div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+            Origen 100% Huila
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8Z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg>
+            Tueste siempre fresco
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h7.5m-10.5 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m18.75 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H15M17.25 18.75H9.75M17.25 7.573v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0A1.106 1.106 0 0 0 5.25 6.615v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+            Envío a toda Colombia
+          </div>
         </div>
+
+        <a href="https://www.cam.gov.co/organizaciones/cafearu/" target="_blank" rel="noopener" class="green-seal" data-cursor-hover>
+          <img src="img/sello-negocios-verdes.png" alt="Sello Negocios Verdes">
+          <span class="green-seal-text">
+            <strong>Certificados</strong>
+            <span>Sello Negocios Verdes, otorgado por la CAM</span>
+          </span>
+        </a>
       </div>
     </div>
   </div>
@@ -172,19 +189,76 @@
   </div>
 </section>
 
-<!-- ============ CTA ============ -->
-<section class="section">
+<!-- ============ RESEÑAS ============ -->
+<section class="section" id="reviewsSection">
   <div class="container">
-    <div class="cta-banner" data-reveal="scale">
-      <h2>¿Quieres ver más opciones?</h2>
-      <p class="lead">Descubre el resto de nuestros cafés en la tienda.</p>
-      <a href="/tienda" class="btn btn-dark" data-magnetic>
-        Ver tienda
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-      </a>
+    <div class="reviews-summary" data-reveal>
+      <div class="reviews-score">
+        <strong id="reviewsAvg">–</strong>
+        <div class="reviews-stars" id="reviewsAvgStars"></div>
+        <span id="reviewsCount">Sin reseñas todavía</span>
+      </div>
+      <div class="reviews-summary-body">
+        <span class="eyebrow">Clientes reales</span>
+        <h2>Lo que dicen de Café Arú</h2>
+        <p class="lead">Reseñas de personas que ya probaron nuestro café.</p>
+        <button type="button" class="btn btn-primary btn-sm" id="openReviewModalBtn">
+          Dejar una reseña
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.1 6.6 7.2.8-5.3 5 1.5 7.2L12 18l-6.5 3.6 1.5-7.2-5.3-5 7.2-.8z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="reviews-carousel" data-reveal>
+      <button type="button" class="reviews-carousel-nav prev" id="reviewsPrevBtn" aria-label="Reseñas anteriores">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="reviews-list" id="reviewsList"></div>
+      <button type="button" class="reviews-carousel-nav next" id="reviewsNextBtn" aria-label="Siguientes reseñas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div id="reviewsEmpty" class="reviews-empty" style="display:none;">
+      Todavía no hay reseñas. ¡Sé el primero en dejar la tuya!
     </div>
   </div>
 </section>
+
+<div class="review-modal" id="reviewModal">
+  <div class="review-modal-backdrop" id="reviewModalBackdrop"></div>
+  <div class="review-modal-card">
+    <button type="button" class="review-modal-close" id="reviewModalClose" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h3>Deja tu reseña</h3>
+    <form id="reviewForm">
+      <div class="review-form-row">
+        <label for="reviewName">Tu nombre</label>
+        <input id="reviewName" required maxlength="80">
+      </div>
+      <div class="review-form-row">
+        <label>Calificación</label>
+        <div class="star-picker" id="starPicker">
+          <button type="button" data-star="1" aria-label="1 estrella">★</button>
+          <button type="button" data-star="2" aria-label="2 estrellas">★</button>
+          <button type="button" data-star="3" aria-label="3 estrellas">★</button>
+          <button type="button" data-star="4" aria-label="4 estrellas">★</button>
+          <button type="button" data-star="5" aria-label="5 estrellas">★</button>
+        </div>
+      </div>
+      <div class="review-form-row">
+        <label for="reviewComment">Tu comentario</label>
+        <textarea id="reviewComment" required maxlength="1000"></textarea>
+      </div>
+      <div class="review-form-error" id="reviewError"></div>
+      <button type="submit" class="btn btn-primary btn-sm" id="reviewSubmitBtn">Publicar reseña</button>
+      <p class="review-form-note">Tu reseña se publica luego de una breve revisión.</p>
+    </form>
+    <div id="reviewSuccess" class="review-success" style="display:none;">
+      ¡Gracias por tu reseña! Quedará publicada pronto.
+    </div>
+  </div>
+</div>
 
 <footer class="site-footer" id="contacto">
   <div class="container">
@@ -248,6 +322,7 @@
 
 <script src="js/main.js"></script>
 <script src="js/cart.js"></script>
+<script src="js/reviews.js"></script>
 <script src="js/producto.js"></script>
 </body>
 </html>

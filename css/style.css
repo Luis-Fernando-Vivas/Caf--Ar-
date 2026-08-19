@@ -683,12 +683,130 @@ section{ position:relative; }
 .total-row{ font-size:.9rem; color:var(--c-text-soft); }
 .total-row strong{ color:var(--c-text); font-family:var(--font-display); font-size:1.15rem; }
 .buy-box .btn{ width:100%; margin-top:1.2rem; }
-.buy-note{ display:flex; align-items:center; gap:.5rem; font-size:.78rem; color:var(--c-text-soft); margin-top:1rem; }
-.buy-note svg{ width:1.1em; height:1.1em; color:var(--c-red); flex:none; }
 
-.trust-row{ display:flex; gap:1.6rem; margin-top:1.8rem; flex-wrap:wrap; }
-.trust-row div{ display:flex; align-items:center; gap:.6rem; font-size:.82rem; color:var(--c-text-soft); }
-.trust-row svg{ width:1.3em; height:1.3em; color:var(--c-red); }
+.trust-row{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem;
+  margin-top:1.8rem; padding-top:1.6rem; border-top:1px solid rgba(36,27,18,.1);
+}
+.trust-row div{
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:.5rem;
+  font-size:.78rem; font-weight:600; color:var(--c-text-soft); line-height:1.3;
+}
+.trust-row svg{ width:1.7em; height:1.7em; color:var(--c-red); }
+@media (max-width:480px){ .trust-row{ grid-template-columns:1fr; gap:1.2rem; } }
+
+/* ---------- sello Negocios Verdes (CAM) ---------- */
+.green-seal{
+  display:inline-flex; align-items:center; gap:.9rem; margin-top:1.6rem;
+  padding:.6rem 1.3rem .6rem .6rem; background:var(--c-white); border-radius:100px;
+  border:1px solid rgba(36,27,18,.1); box-shadow:0 14px 28px -16px rgba(23,17,12,.25);
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.green-seal:hover{ transform:translateY(-3px); box-shadow:0 20px 36px -16px rgba(23,17,12,.3); }
+.green-seal img{ width:54px; height:auto; flex:none; }
+.green-seal-text strong{
+  display:block; color:#3f8f2f; font-size:.7rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; margin-bottom:.2rem;
+}
+.green-seal-text span{ display:block; font-size:.82rem; font-weight:600; color:var(--c-text); line-height:1.3; }
+
+/* ---------- mini-resumen de estrellas (arriba del título) ---------- */
+.reviews-mini{
+  display:flex; width:fit-content; align-items:center; gap:.5rem; margin:.6rem 0 .2rem; color:var(--c-text-soft);
+  font-size:.82rem; font-weight:600; cursor:pointer;
+}
+.reviews-mini-stars{ color:var(--c-kraft-dark); font-size:.95rem; letter-spacing:.04em; }
+.reviews-mini:hover{ color:var(--c-text); }
+
+/* ---------- reseñas (producto.html) ---------- */
+.reviews-summary{
+  display:flex; align-items:center; gap:2.2rem; margin-bottom:2.4rem; flex-wrap:wrap;
+}
+.reviews-score{
+  flex:none; display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding:1.4rem 2rem; background:var(--c-white); border:1px solid rgba(36,27,18,.1); border-radius:20px;
+}
+.reviews-score strong{ font-family:var(--font-display); font-size:2.6rem; color:var(--c-red); line-height:1; }
+.reviews-stars{ color:var(--c-kraft-dark); font-size:1.2rem; letter-spacing:.1em; margin:.4rem 0 .3rem; }
+.reviews-score span{ font-size:.78rem; color:var(--c-text-soft); font-weight:600; white-space:nowrap; }
+.reviews-summary-body h2{ margin-top:.3rem; margin-bottom:.6rem; }
+.reviews-summary-body .btn{ margin-top:.6rem; }
+
+/* carrusel */
+.reviews-carousel{ position:relative; margin-bottom:1.4rem; }
+.reviews-list{
+  display:flex; gap:1.2rem; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+  padding:.3rem .2rem 1rem; scrollbar-width:none;
+}
+.reviews-list::-webkit-scrollbar{ display:none; }
+
+.review-card{
+  background:var(--c-white); border:1px solid rgba(36,27,18,.1); border-radius:18px; padding:1.4rem;
+  display:flex; flex-direction:column; gap:.7rem; flex:0 0 300px; scroll-snap-align:start;
+}
+@media (max-width:640px){ .review-card{ flex-basis:82vw; } }
+.review-card-head{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
+.review-card-head strong{ font-size:.92rem; }
+.review-stars{ color:var(--c-kraft-dark); font-size:.9rem; letter-spacing:.06em; flex:none; }
+.review-card p{ font-size:.88rem; color:var(--c-text-soft); line-height:1.6; flex:1; }
+.review-date{ font-size:.72rem; color:var(--c-text-soft); opacity:.75; }
+
+.reviews-carousel-nav{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:42px; height:42px; border-radius:50%;
+  background:var(--c-white); border:1px solid rgba(36,27,18,.12); box-shadow:0 10px 24px -12px rgba(23,17,12,.3);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-text);
+  transition:transform .25s var(--ease), background .25s var(--ease);
+}
+.reviews-carousel-nav:hover{ background:var(--c-red); color:var(--c-white); }
+.reviews-carousel-nav svg{ width:1.1em; height:1.1em; }
+.reviews-carousel-nav.prev{ left:-14px; }
+.reviews-carousel-nav.next{ right:-14px; }
+@media (max-width:640px){ .reviews-carousel-nav{ display:none; } }
+
+.reviews-empty{
+  background:var(--c-white); border-radius:16px; padding:2.4rem 1.5rem; text-align:center;
+  color:var(--c-text-soft); margin-bottom:2.4rem;
+}
+
+/* popup para dejar reseña */
+.review-modal{
+  position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center;
+  padding:1.5rem; opacity:0; pointer-events:none; transition:opacity .3s var(--ease);
+}
+.review-modal.is-open{ opacity:1; pointer-events:auto; }
+.review-modal-backdrop{ position:absolute; inset:0; background:rgba(23,17,12,.6); }
+.review-modal-card{
+  position:relative; width:100%; max-width:520px; max-height:88vh; overflow-y:auto;
+  background:var(--c-cream-2); border-radius:20px; padding:2rem;
+  transform:translateY(24px); transition:transform .35s var(--ease);
+}
+.review-modal.is-open .review-modal-card{ transform:translateY(0); }
+.review-modal-close{
+  position:absolute; top:1.1rem; right:1.1rem; background:none; border:none; cursor:pointer; color:var(--c-text-soft);
+}
+.review-modal-close svg{ width:1.4em; height:1.4em; }
+.review-modal-card h3{ font-size:1.15rem; margin-bottom:1.2rem; padding-right:2rem; }
+
+.review-form-row{ margin-bottom:1.1rem; }
+.review-form-row label{ display:block; font-size:.85rem; font-weight:600; color:var(--c-text-soft); margin-bottom:.5rem; }
+.review-form-row input, .review-form-row textarea{
+  width:100%; padding:.7em .9em; border-radius:10px; border:1px solid rgba(36,27,18,.18);
+  font-family:inherit; font-size:.9rem; background:var(--c-white);
+}
+.review-form-row textarea{ min-height:6rem; resize:vertical; }
+
+.star-picker{ display:flex; gap:.3rem; }
+.star-picker button{
+  background:none; border:none; font-size:1.8rem; line-height:1; color:rgba(36,27,18,.22); cursor:pointer;
+  transition:color .2s var(--ease);
+}
+.star-picker button.active{ color:var(--c-kraft-dark); }
+
+.review-form-error{ color:var(--c-red); font-size:.82rem; min-height:1.2em; margin-bottom:.6rem; }
+.review-form-note{ font-size:.76rem; color:var(--c-text-soft); margin-top:.7rem; }
+.review-success{
+  background:rgba(0,176,144,.12); color:#00875f; border-radius:14px; padding:1.2rem 1.4rem; font-size:.9rem; font-weight:600;
+}
 
 @media (max-width:900px){
   .product-main{ grid-template-columns:1fr; }

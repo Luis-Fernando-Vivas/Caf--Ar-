@@ -134,6 +134,8 @@ function renderProduct(product) {
 
   document.getElementById('productLoading').style.display = 'none';
   document.getElementById('productMain').style.display = '';
+
+  if (window.Reviews) Reviews.init(product);
 }
 
 async function loadProduct() {
