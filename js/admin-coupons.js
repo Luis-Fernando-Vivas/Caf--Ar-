@@ -7,7 +7,7 @@ function formatCOP(n) {
 async function loadCoupons() {
   const res = await fetch('/api/admin/coupons');
   if (res.status === 401) {
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
     return;
   }
   const tbody = document.getElementById('couponsBody');
@@ -119,6 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('refreshBtn').addEventListener('click', loadCoupons);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/admin/session', { method: 'DELETE' });
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
   });
 });

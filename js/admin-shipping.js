@@ -7,7 +7,7 @@ function formatCOP(n) {
 async function loadRates() {
   const res = await fetch('/api/admin/shipping-rates');
   if (res.status === 401) {
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
     return;
   }
   const tbody = document.getElementById('ratesBody');
@@ -100,6 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('refreshBtn').addEventListener('click', loadRates);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/admin/session', { method: 'DELETE' });
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
   });
 });

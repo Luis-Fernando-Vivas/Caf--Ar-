@@ -125,7 +125,7 @@ function initLoginPage(){
       } else if (res.status === 401) {
         errorEl.textContent = 'Contraseña incorrecta.';
       } else if (res.ok) {
-        window.location.href = 'index.html';
+        window.location.href = '/admin';
         return;
       } else {
         errorEl.textContent = 'Algo salió mal. Intenta de nuevo.';
@@ -483,7 +483,7 @@ async function updateStatus(id, status, selectEl){
 async function loadOrders(){
   const res = await fetch('/api/admin/orders');
   if (res.status === 401) {
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
     return;
   }
   if (!res.ok) {
@@ -529,7 +529,7 @@ function renderWompiEnv(environment, configured){
 async function loadWompiEnv(){
   const res = await fetch('/api/admin/wompi-env');
   if (res.status === 401) {
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
     return;
   }
   if (!res.ok) return;
@@ -583,7 +583,7 @@ function initDashboardPage(){
   document.getElementById('refreshBtn')?.addEventListener('click', () => { loadOrders(); loadWompiEnv(); });
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
     await fetch('/api/admin/session', { method: 'DELETE' });
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
   });
 }
 

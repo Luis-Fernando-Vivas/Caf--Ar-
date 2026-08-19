@@ -89,7 +89,7 @@ function loadIntoForm(product) {
 async function loadProducts() {
   const res = await fetch('/api/admin/products');
   if (res.status === 401) {
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
     return;
   }
   const tbody = document.getElementById('productsBody');
@@ -259,6 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('refreshBtn').addEventListener('click', loadProducts);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/admin/session', { method: 'DELETE' });
-    window.location.href = 'login.html';
+    window.location.href = '/admin/login';
   });
 });

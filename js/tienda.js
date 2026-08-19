@@ -15,7 +15,7 @@ function renderProductCard(product) {
   // quedarían con opacity:0 para siempre (el bug de "el producto no aparece").
 
   const link = document.createElement('a');
-  link.href = 'producto.html?slug=' + encodeURIComponent(product.slug);
+  link.href = '/producto?slug=' + encodeURIComponent(product.slug);
   link.setAttribute('data-cursor-hover', '');
 
   const media = document.createElement('div');

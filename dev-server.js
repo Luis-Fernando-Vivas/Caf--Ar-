@@ -75,26 +75,38 @@ async function handleApi(req, res, pathname) {
   }
 }
 
-function serveStatic(req, res, pathname) {
-  let filePath = path.join(ROOT, decodeURIComponent(pathname));
-  if (pathname.endsWith('/')) filePath = path.join(filePath, 'index.html');
+// Imita el "cleanUrls" de Vercel (ver vercel.json) para que el sitio se
+// comporte igual en local: /tienda sirve tienda.html, /admin sirve
+// admin/index.html, y entrar con ".html" redirige a la versión sin extensión.
+async function serveStatic(req, res, pathname) {
+  if (pathname.length > 1 && pathname.endsWith('.html')) {
+    let clean = pathname.slice(0, -'.html'.length);
+    if (clean.endsWith('/index')) clean = clean.slice(0, -'/index'.length) || '/';
+    res.statusCode = 301;
+    res.setHeader('Location', clean);
+    res.end();
+    return;
+  }
 
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      // admin/login, admin/index sin extensión -> intenta con .html
-      const withHtml = filePath + '.html';
-      fs.stat(withHtml, (err2, stats2) => {
-        if (err2 || !stats2.isFile()) {
-          res.statusCode = 404;
-          res.end('404 Not Found: ' + pathname);
-          return;
-        }
-        streamFile(res, withHtml);
-      });
-      return;
+  const target = path.join(ROOT, decodeURIComponent(pathname));
+  const candidates = pathname.endsWith('/')
+    ? [path.join(target, 'index.html')]
+    : [target, target + '.html', path.join(target, 'index.html')];
+
+  for (const candidate of candidates) {
+    try {
+      const stats = await fs.promises.stat(candidate);
+      if (stats.isFile()) {
+        streamFile(res, candidate);
+        return;
+      }
+    } catch {
+      // sigue con el siguiente candidato
     }
-    streamFile(res, filePath);
-  });
+  }
+
+  res.statusCode = 404;
+  res.end('404 Not Found: ' + pathname);
 }
 
 function streamFile(res, filePath) {
@@ -112,12 +124,12 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  serveStatic(req, res, pathname);
+  await serveStatic(req, res, pathname);
 });
 
 server.listen(PORT, () => {
   console.log(`Café Arú corriendo en local: http://localhost:${PORT}`);
-  console.log(`Backoffice: http://localhost:${PORT}/admin/login.html`);
+  console.log(`Backoffice: http://localhost:${PORT}/admin/login`);
   if (!process.env.WOMPI_PUBLIC_KEY_TEST && !process.env.WOMPI_PUBLIC_KEY_PROD) {
     console.warn('Aviso: no se detectaron variables de Wompi -- ¿corriste con --env-file=.env?');
   }

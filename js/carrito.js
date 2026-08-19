@@ -176,7 +176,7 @@ async function checkout(channel) {
     }
 
     if (channel === 'wompi') {
-      const redirectUrl = `${location.origin}/gracias.html`;
+      const redirectUrl = `${location.origin}/gracias`;
       const params = new URLSearchParams({
         'public-key': data.publicKey,
         currency: data.currency,

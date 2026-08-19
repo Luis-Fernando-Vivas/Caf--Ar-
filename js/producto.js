@@ -92,7 +92,7 @@ function renderProduct(product) {
     });
     buyBtn.addEventListener('click', () => {
       Cart.add(product, qty);
-      window.location.href = 'carrito.html';
+      window.location.href = '/carrito';
     });
   }
 
