@@ -96,8 +96,26 @@
     return;
   }
 
-  fetch('https://api.wompi.co/v1/transactions/' + encodeURIComponent(id))
-    .then(res => { if (!res.ok) throw new Error('lookup-failed'); return res.json(); })
+  // La transacción puede existir en el ambiente de pruebas (sandbox) o en el real,
+  // según qué llaves estuvieran activas cuando se generó el pago -- esta página no
+  // sabe cuál fue, así que intenta sandbox primero (lo más común mientras se prueba)
+  // y si no la encuentra, cae a producción.
+  async function fetchTransaction(txId){
+    const hosts = ['https://sandbox.wompi.co', 'https://api.wompi.co'];
+    let lastError = null;
+    for (const host of hosts){
+      try {
+        const res = await fetch(host + '/v1/transactions/' + encodeURIComponent(txId));
+        if (res.ok) return res.json();
+        lastError = new Error('lookup-failed');
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError;
+  }
+
+  fetchTransaction(id)
     .then(json => {
       const tx = json && json.data;
       if (!tx) throw new Error('no-data');
