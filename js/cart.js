@@ -34,9 +34,12 @@ const Cart = {
     return cartRead().reduce((sum, it) => sum + it.price_cop * it.quantity, 0);
   },
 
-  add(product, quantity = 1) {
+  // "variant" es la presentación elegida (ej. "Molido" / "Grano entero"), o
+  // null si el producto no tiene presentaciones. Dos líneas del mismo
+  // producto con distinta presentación se guardan por separado.
+  add(product, quantity = 1, variant = null) {
     const items = cartRead();
-    const existing = items.find((it) => it.product_id === product.id);
+    const existing = items.find((it) => it.product_id === product.id && (it.variant || null) === (variant || null));
     if (existing) {
       existing.quantity = Math.min(20, existing.quantity + quantity);
     } else {
@@ -46,22 +49,23 @@ const Cart = {
         name: product.name,
         price_cop: product.price_cop,
         image: product.images && product.images[0] ? product.images[0].url : '',
+        variant: variant || null,
         quantity: Math.max(1, Math.min(20, quantity)),
       });
     }
     cartWrite(items);
   },
 
-  setQty(productId, quantity) {
+  setQty(productId, quantity, variant = null) {
     const items = cartRead();
-    const item = items.find((it) => it.product_id === productId);
+    const item = items.find((it) => it.product_id === productId && (it.variant || null) === (variant || null));
     if (!item) return;
     item.quantity = Math.max(1, Math.min(20, parseInt(quantity, 10) || 1));
     cartWrite(items);
   },
 
-  remove(productId) {
-    cartWrite(cartRead().filter((it) => it.product_id !== productId));
+  remove(productId, variant = null) {
+    cartWrite(cartRead().filter((it) => !(it.product_id === productId && (it.variant || null) === (variant || null))));
   },
 
   clear() {

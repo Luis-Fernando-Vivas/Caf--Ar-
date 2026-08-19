@@ -39,9 +39,16 @@ function renderLines() {
     body.className = 'cart-line-body';
     const h4 = document.createElement('h4');
     h4.textContent = it.name;
+    body.appendChild(h4);
+    if (it.variant) {
+      const variantNote = document.createElement('span');
+      variantNote.className = 'cart-line-variant';
+      variantNote.textContent = it.variant;
+      body.appendChild(variantNote);
+    }
     const price = document.createElement('span');
     price.textContent = '$' + formatCOP(it.price_cop) + ' c/u';
-    body.append(h4, price);
+    body.appendChild(price);
     line.appendChild(body);
 
     const qtyBox = document.createElement('div');
@@ -49,13 +56,13 @@ function renderLines() {
     const minus = document.createElement('button');
     minus.type = 'button';
     minus.textContent = '–';
-    minus.addEventListener('click', () => { Cart.setQty(it.product_id, it.quantity - 1); });
+    minus.addEventListener('click', () => { Cart.setQty(it.product_id, it.quantity - 1, it.variant); });
     const qtySpan = document.createElement('span');
     qtySpan.textContent = it.quantity;
     const plus = document.createElement('button');
     plus.type = 'button';
     plus.textContent = '+';
-    plus.addEventListener('click', () => { Cart.setQty(it.product_id, it.quantity + 1); });
+    plus.addEventListener('click', () => { Cart.setQty(it.product_id, it.quantity + 1, it.variant); });
     qtyBox.append(minus, qtySpan, plus);
     line.appendChild(qtyBox);
 
@@ -68,7 +75,7 @@ function renderLines() {
     removeBtn.type = 'button';
     removeBtn.className = 'cart-line-remove';
     removeBtn.textContent = 'Quitar';
-    removeBtn.addEventListener('click', () => { Cart.remove(it.product_id); });
+    removeBtn.addEventListener('click', () => { Cart.remove(it.product_id, it.variant); });
     line.appendChild(removeBtn);
 
     wrap.appendChild(line);
@@ -110,7 +117,7 @@ async function refreshTotals() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      items: items.map((it) => ({ product_id: it.product_id, quantity: it.quantity })),
+      items: items.map((it) => ({ product_id: it.product_id, quantity: it.quantity, variant: it.variant })),
       shipping_rate_id: selectedShippingId,
       coupon_code: appliedCoupon || undefined,
       preview: true,
@@ -163,7 +170,7 @@ async function checkout(channel) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: items.map((it) => ({ product_id: it.product_id, quantity: it.quantity })),
+        items: items.map((it) => ({ product_id: it.product_id, quantity: it.quantity, variant: it.variant })),
         shipping_rate_id: selectedShippingId,
         coupon_code: appliedCoupon || undefined,
         channel,

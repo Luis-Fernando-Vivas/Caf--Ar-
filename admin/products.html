@@ -64,12 +64,20 @@
             <input id="fPrice" type="number" min="1" step="1" required>
           </div>
           <div class="admin-form-field">
+            <label for="fCompareAt">Precio antes de descuento (opcional)</label>
+            <input id="fCompareAt" type="number" min="1" step="1" placeholder="Vacío = sin tachado">
+          </div>
+          <div class="admin-form-field">
             <label for="fStock">Stock</label>
             <input id="fStock" type="number" min="0" step="1" required>
           </div>
           <div class="admin-form-field span-2">
             <label for="fTags">Notas de sabor (separadas por coma)</label>
             <input id="fTags" placeholder="Dulzura natural, Notas cítricas, Chocolate">
+          </div>
+          <div class="admin-form-field span-2">
+            <label for="fGrindOptions">Presentaciones (separadas por coma, vacío = sin selector)</label>
+            <input id="fGrindOptions" placeholder="Grano entero, Molido">
           </div>
           <div class="admin-form-field span-2">
             <label for="fDescription">Descripción</label>

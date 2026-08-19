@@ -59,8 +59,10 @@ function resetForm() {
   document.getElementById('fSlug').value = '';
   document.getElementById('fStatus').value = 'active';
   document.getElementById('fPrice').value = '';
+  document.getElementById('fCompareAt').value = '';
   document.getElementById('fStock').value = '';
   document.getElementById('fTags').value = '';
+  document.getElementById('fGrindOptions').value = '';
   document.getElementById('fDescription').value = '';
   document.getElementById('formTitle').textContent = 'Nuevo producto';
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -76,8 +78,10 @@ function loadIntoForm(product) {
   document.getElementById('fSlug').value = product.slug;
   document.getElementById('fStatus').value = product.status;
   document.getElementById('fPrice').value = product.price_cop;
+  document.getElementById('fCompareAt').value = product.compare_at_price_cop || '';
   document.getElementById('fStock').value = product.stock;
   document.getElementById('fTags').value = (product.flavor_tags || []).join(', ');
+  document.getElementById('fGrindOptions').value = (product.grind_options || []).join(', ');
   document.getElementById('fDescription').value = product.description || '';
   document.getElementById('formTitle').textContent = 'Editar producto';
   document.getElementById('cancelEditBtn').style.display = '';
@@ -183,7 +187,7 @@ async function openUploadWidget() {
       return;
     }
     if (!res.ok) throw new Error('signature_failed');
-    const { cloudName, apiKey, timestamp, folder, signature } = await res.json();
+    const { cloudName, apiKey } = await res.json();
 
     if (typeof cloudinary === 'undefined') {
       hint.textContent = 'No se pudo cargar el widget de Cloudinary (revisa tu conexión).';
@@ -191,8 +195,28 @@ async function openUploadWidget() {
       return;
     }
 
+    // El widget agrega sus propios parámetros (ej. "source=uw") a lo que sube,
+    // así que en vez de mandarle una firma calculada de antemano (que dejaría
+    // esos parámetros sin firmar y Cloudinary respondería "Invalid Signature"),
+    // le pasamos una función: el widget nos manda los parámetros REALES justo
+    // antes de subir y nuestro servidor firma exactamente esos.
     const widget = cloudinary.createUploadWidget(
-      { cloudName, apiKey, uploadSignature: signature, uploadSignatureTimestamp: timestamp, folder, sources: ['local', 'url', 'camera'], multiple: true },
+      {
+        cloudName,
+        apiKey,
+        uploadSignature: (callback, paramsToSign) => {
+          fetch('/api/admin/cloudinary-signature', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paramsToSign }),
+          })
+            .then((r) => r.json())
+            .then((data) => callback(data.signature));
+        },
+        folder: 'cafe-aru/products',
+        sources: ['local', 'url', 'camera'],
+        multiple: true,
+      },
       (error, result) => {
         if (!error && result.event === 'success') {
           images.push({ url: result.info.secure_url, public_id: result.info.public_id });
@@ -221,8 +245,12 @@ async function saveProduct(e) {
     slug: document.getElementById('fSlug').value.trim(),
     status: document.getElementById('fStatus').value,
     price_cop: parseInt(document.getElementById('fPrice').value, 10),
+    compare_at_price_cop: document.getElementById('fCompareAt').value
+      ? parseInt(document.getElementById('fCompareAt').value, 10)
+      : null,
     stock: parseInt(document.getElementById('fStock').value, 10),
     flavor_tags: document.getElementById('fTags').value.split(',').map((t) => t.trim()).filter(Boolean),
+    grind_options: document.getElementById('fGrindOptions').value.split(',').map((t) => t.trim()).filter(Boolean),
     description: document.getElementById('fDescription').value,
     images,
   };

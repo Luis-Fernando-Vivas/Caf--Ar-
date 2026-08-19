@@ -37,6 +37,19 @@ function normalizeProductInput(body, { partial } = {}) {
     out.price_cop = price;
   }
 
+  if (!partial || body.compare_at_price_cop !== undefined) {
+    const raw = body.compare_at_price_cop;
+    if (raw === null || raw === '' || raw === undefined) {
+      out.compare_at_price_cop = null;
+    } else {
+      const compareAt = parseInt(raw, 10);
+      if (!Number.isFinite(compareAt) || compareAt <= 0) {
+        throw new Error('El precio antes de descuento debe ser un número positivo.');
+      }
+      out.compare_at_price_cop = compareAt;
+    }
+  }
+
   if (!partial || body.stock !== undefined) {
     const stock = parseInt(body.stock, 10);
     if (!Number.isFinite(stock) || stock < 0) throw new Error('El stock debe ser un número >= 0.');
@@ -57,6 +70,11 @@ function normalizeProductInput(body, { partial } = {}) {
   if (!partial || body.flavor_tags !== undefined) {
     const tags = Array.isArray(body.flavor_tags) ? body.flavor_tags : [];
     out.flavor_tags = tags.map((t) => String(t).trim()).filter(Boolean);
+  }
+
+  if (!partial || body.grind_options !== undefined) {
+    const options = Array.isArray(body.grind_options) ? body.grind_options : [];
+    out.grind_options = options.map((t) => String(t).trim()).filter(Boolean);
   }
 
   if (!partial || body.status !== undefined) {
@@ -90,8 +108,8 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET') {
       const rows = await sql`
-        SELECT id, slug, name, description, price_cop, stock, images, flavor_tags, status, sort_order,
-               created_at, updated_at
+        SELECT id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
+               grind_options, status, sort_order, created_at, updated_at
         FROM products
         ORDER BY sort_order ASC, id ASC
       `;
@@ -110,12 +128,12 @@ module.exports = async (req, res) => {
 
       try {
         const rows = await sql`
-          INSERT INTO products (slug, name, description, price_cop, stock, images, flavor_tags, status, sort_order)
-          VALUES (${data.slug}, ${data.name}, ${data.description}, ${data.price_cop}, ${data.stock},
+          INSERT INTO products (slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags, grind_options, status, sort_order)
+          VALUES (${data.slug}, ${data.name}, ${data.description}, ${data.price_cop}, ${data.compare_at_price_cop ?? null}, ${data.stock},
                   ${JSON.stringify(data.images)}::jsonb, ${JSON.stringify(data.flavor_tags)}::jsonb,
-                  ${data.status}, ${data.sort_order})
-          RETURNING id, slug, name, description, price_cop, stock, images, flavor_tags, status, sort_order,
-                    created_at, updated_at
+                  ${JSON.stringify(data.grind_options)}::jsonb, ${data.status}, ${data.sort_order})
+          RETURNING id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
+                    grind_options, status, sort_order, created_at, updated_at
         `;
         res.status(201).json({ product: rows[0] });
       } catch (err) {
@@ -155,15 +173,18 @@ module.exports = async (req, res) => {
             slug = COALESCE(${data.slug ?? null}, slug),
             description = COALESCE(${data.description ?? null}, description),
             price_cop = COALESCE(${data.price_cop ?? null}, price_cop),
+            compare_at_price_cop = CASE WHEN ${data.compare_at_price_cop === undefined}
+              THEN compare_at_price_cop ELSE ${data.compare_at_price_cop ?? null} END,
             stock = COALESCE(${data.stock ?? null}, stock),
             images = COALESCE(${data.images ? JSON.stringify(data.images) : null}::jsonb, images),
             flavor_tags = COALESCE(${data.flavor_tags ? JSON.stringify(data.flavor_tags) : null}::jsonb, flavor_tags),
+            grind_options = COALESCE(${data.grind_options ? JSON.stringify(data.grind_options) : null}::jsonb, grind_options),
             status = COALESCE(${data.status ?? null}, status),
             sort_order = COALESCE(${data.sort_order ?? null}, sort_order),
             updated_at = now()
           WHERE id = ${id}
-          RETURNING id, slug, name, description, price_cop, stock, images, flavor_tags, status, sort_order,
-                    created_at, updated_at
+          RETURNING id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
+                    grind_options, status, sort_order, created_at, updated_at
         `;
         if (!rows.length) {
           res.status(404).json({ error: 'not_found' });
