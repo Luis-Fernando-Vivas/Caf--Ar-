@@ -34,8 +34,6 @@ function setupGallery(images) {
 function renderProduct(product) {
   document.getElementById('pageTitle').textContent = `${product.name} — Comprar | Café Arú`;
   document.getElementById('pageDescription').content = `Compra ${product.name}: ${product.description || ''}`.slice(0, 155);
-  document.getElementById('heroName').textContent = product.name;
-  document.getElementById('crumbName').textContent = product.name;
   document.getElementById('prodName').textContent = product.name;
   document.getElementById('prodPrice').textContent = '$' + formatCOP(product.price_cop);
 

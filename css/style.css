@@ -232,7 +232,7 @@ section{ position:relative; }
 .hero .lead{ color:rgba(248,242,228,.72); max-width:34em; margin-top:1.4rem; }
 .hero-actions{ display:flex; gap:1rem; margin-top:2.4rem; flex-wrap:wrap; }
 
-.hero-stats{ display:flex; gap:2.4rem; margin-top:3.2rem; }
+.hero-stats{ display:flex; flex-wrap:wrap; gap:1.6rem 2.4rem; margin-top:3.2rem; }
 .hero-stats div{ display:flex; flex-direction:column; gap:.2rem; }
 .hero-stats strong{ font-family:var(--font-display); font-size:1.9rem; color:var(--c-white); }
 .hero-stats div > span{ font-size:.78rem; color:rgba(248,242,228,.55); text-transform:uppercase; letter-spacing:.08em; }
@@ -272,6 +272,11 @@ section{ position:relative; }
 }
 .product-3d .face-back img{ max-width:52%; filter:drop-shadow(0 10px 18px rgba(0,0,0,.5)); }
 @media (max-width:860px){ .product-3d{ max-width:280px; } }
+@media (max-width:900px){
+  .hero{ min-height:auto; padding-top:8rem; padding-bottom:3rem; }
+  .hero .container{ grid-template-columns:1fr; gap:2.5rem; }
+  .hero-visual{ min-height:320px; }
+}
 
 .scroll-cue{
   position:absolute; left:50%; bottom:2.2rem; transform:translateX(-50%);
@@ -521,6 +526,13 @@ section{ position:relative; }
 .cart-line-remove{ border:none; background:transparent; color:var(--c-text-soft); cursor:pointer; font-size:.8rem; }
 .cart-line-remove:hover{ color:var(--c-red); }
 
+@media (max-width:560px){
+  .cart-line{ flex-wrap:wrap; }
+  .cart-line img{ width:52px; height:52px; }
+  .cart-line-body{ flex:1 1 55%; }
+  .cart-line-total{ margin-left:auto; }
+}
+
 .cart-summary{
   background:var(--c-white); border-radius:16px; padding:1.6rem; border:1px solid rgba(36,27,18,.08);
   position:sticky; top:6.5rem;
@@ -622,6 +634,13 @@ section{ position:relative; }
 /* ===================================================================
    Product page
 =================================================================== */
+/* producto.html no tiene .page-hero (el header se fuerza a su versión
+   compacta ahí, ver main.js), así que solo necesita el espacio justo para
+   no quedar tapado por el header fijo -- mucho menos que el hero alto de
+   otras páginas, y todavía menos en móvil donde el header es más chico. */
+.product-hero-gap{ padding-top:6.5rem; }
+@media (max-width:640px){ .product-hero-gap{ padding-top:5rem; } }
+
 .product-main{ display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start; }
 .product-gallery{ position:sticky; top:7rem; }
 .product-gallery-main{
@@ -649,7 +668,7 @@ section{ position:relative; }
   text-transform:uppercase; letter-spacing:.05em; padding:.4em .9em; border-radius:100px; margin-top:.6rem;
 }
 
-.price-row{ display:flex; align-items:baseline; gap:.8rem; margin:1.4rem 0; }
+.price-row{ display:flex; flex-wrap:wrap; align-items:baseline; gap:.5rem .8rem; margin:1.4rem 0; }
 .price-row .price{ font-family:var(--font-display); font-size:2.4rem; color:var(--c-red); }
 .price-row .price-compare{ font-size:1.15rem; }
 .price-row .unit{ color:var(--c-text-soft); font-size:.9rem; }
@@ -726,6 +745,7 @@ section{ position:relative; }
   flex:none; display:flex; flex-direction:column; align-items:center; text-align:center;
   padding:1.4rem 2rem; background:var(--c-white); border:1px solid rgba(36,27,18,.1); border-radius:20px;
 }
+@media (max-width:480px){ .reviews-score{ padding:1.1rem 1.5rem; width:100%; } }
 .reviews-score strong{ font-family:var(--font-display); font-size:2.6rem; color:var(--c-red); line-height:1; }
 .reviews-stars{ color:var(--c-kraft-dark); font-size:1.2rem; letter-spacing:.1em; margin:.4rem 0 .3rem; }
 .reviews-score span{ font-size:.78rem; color:var(--c-text-soft); font-weight:600; white-space:nowrap; }
@@ -780,6 +800,7 @@ section{ position:relative; }
   background:var(--c-cream-2); border-radius:20px; padding:2rem;
   transform:translateY(24px); transition:transform .35s var(--ease);
 }
+@media (max-width:480px){ .review-modal-card{ padding:1.5rem; } }
 .review-modal.is-open .review-modal-card{ transform:translateY(0); }
 .review-modal-close{
   position:absolute; top:1.1rem; right:1.1rem; background:none; border:none; cursor:pointer; color:var(--c-text-soft);

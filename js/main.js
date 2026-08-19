@@ -26,7 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------------- header scroll state ---------------- */
   const header = document.querySelector('.site-header');
   if (header) {
-    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 30);
+    // El header claro/transparente está pensado para ir encima de un hero oscuro
+    // (.page-hero). En páginas que no tienen uno (ej. producto.html), forzamos
+    // el estado "scrolled" siempre, para que el texto no quede invisible sobre
+    // el fondo claro del resto de la página.
+    const hasHero = Boolean(document.querySelector('.page-hero, .hero'));
+    const onScroll = () => header.classList.toggle('is-scrolled', !hasHero || window.scrollY > 30);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive:true });
   }
