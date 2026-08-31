@@ -61,6 +61,16 @@
       <aside class="cart-summary" id="cartSummary" style="display:none;">
         <h3>Resumen</h3>
 
+        <div class="free-shipping-bar" id="freeShippingBar" style="display:none;">
+          <p class="free-shipping-bar-text" id="freeShippingBarText"></p>
+          <div class="free-shipping-bar-track">
+            <div class="free-shipping-bar-fill" id="freeShippingBarFill"></div>
+            <div class="free-shipping-bar-cart" id="freeShippingBarCart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+            </div>
+          </div>
+        </div>
+
         <div class="cart-summary-row">
           <span>Subtotal</span><strong id="sumSubtotal">$0</strong>
         </div>
@@ -77,7 +87,11 @@
           <span>Descuento</span><strong id="sumDiscount" style="color:var(--c-red);">-$0</strong>
         </div>
         <div class="cart-summary-row">
-          <span>Envío</span><strong id="sumShipping">$0</strong>
+          <span>Envío</span>
+          <strong id="sumShipping">
+            <span id="sumShippingOriginal" class="cart-shipping-strike" style="display:none;"></span>
+            <span id="sumShippingValue">$0</span>
+          </strong>
         </div>
         <div class="cart-summary-row cart-summary-total">
           <span>Total</span><strong id="sumTotal">$0</strong>

@@ -18,7 +18,8 @@ async function loadRates() {
     tbody.innerHTML = '';
     return;
   }
-  const { rates } = await res.json();
+  const { rates, free_shipping_rule } = await res.json();
+  fillRuleForm(free_shipping_rule);
   tbody.innerHTML = '';
   if (!rates.length) {
     empty.style.display = 'block';
@@ -94,9 +95,43 @@ async function createRate(e) {
   await loadRates();
 }
 
+function fillRuleForm(rule) {
+  document.getElementById('rEnabled').checked = Boolean(rule && rule.enabled);
+  document.getElementById('rMinQuantity').value = rule && rule.min_quantity !== null ? rule.min_quantity : '';
+  document.getElementById('rMinSubtotal').value = rule && rule.min_subtotal_cop !== null ? rule.min_subtotal_cop : '';
+}
+
+async function saveRule(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById('ruleError');
+  errorEl.textContent = '';
+
+  const enabled = document.getElementById('rEnabled').checked;
+  const minQuantityRaw = document.getElementById('rMinQuantity').value.trim();
+  const minSubtotalRaw = document.getElementById('rMinSubtotal').value.trim();
+
+  const res = await fetch('/api/admin/shipping-rates', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      enabled,
+      min_quantity: minQuantityRaw === '' ? null : minQuantityRaw,
+      min_subtotal_cop: minSubtotalRaw === '' ? null : minSubtotalRaw,
+    }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    errorEl.textContent = data.message || 'No se pudo guardar la regla.';
+    return;
+  }
+  const { free_shipping_rule } = await res.json();
+  fillRuleForm(free_shipping_rule);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadRates();
   document.getElementById('rateForm').addEventListener('submit', createRate);
+  document.getElementById('ruleForm').addEventListener('submit', saveRule);
   document.getElementById('refreshBtn').addEventListener('click', loadRates);
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/admin/session', { method: 'DELETE' });

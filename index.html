@@ -7,6 +7,7 @@
 <meta name="description" content="Café Arú: café tipo Honey 100% colombiano, de producción familiar y artesanal en Palermo, Huila. Calidad, sabor y tradición en cada taza.">
 <link rel="icon" href="img/logo-cafe-aru.png">
 <link rel="stylesheet" href="css/style.css">
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
 
@@ -72,12 +73,24 @@
     <div class="hero-visual">
       <div class="ring"></div>
       <div class="ring r2"></div>
-      <div class="product-3d">
-        <div class="product-3d-inner">
-          <div class="face face-front"><img src="img/producto-bolsa-500g.png" alt="Bolsa de Café Arú 500g"></div>
-          <div class="face face-back"><img src="img/logo-cafe-aru-light.png" alt="Café Arú"></div>
-        </div>
-      </div>
+      <model-viewer
+        class="product-3d-viewer"
+        src="img/Cafe-aru-bolsa.glb"
+        alt="Bolsa de Café Arú en 3D"
+        camera-controls
+        auto-rotate
+        auto-rotate-delay="0"
+        rotation-per-second="18deg"
+        interaction-prompt="none"
+        shadow-intensity="1"
+        exposure="1"
+        disable-zoom
+        camera-orbit="0deg 75deg auto"
+        min-camera-orbit="auto auto auto"
+        max-camera-orbit="auto auto auto"
+        field-of-view="auto"
+        loading="eager"
+      ></model-viewer>
     </div>
   </div>
   <div class="scroll-cue"><span>Scroll</span><div class="line"></div></div>

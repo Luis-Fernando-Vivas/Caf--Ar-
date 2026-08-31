@@ -50,10 +50,14 @@ module.exports = async (req, res) => {
     if (body.preview) {
       res.status(200).json({
         subtotal_cop: totals.subtotal_cop,
+        total_quantity: totals.total_quantity,
         shipping_cop: totals.shipping_cop,
+        shipping_original_cop: totals.shipping_original_cop,
         shipping_name: totals.shipping_name,
         discount_cop: totals.discount_cop,
         amount_cop: totals.amount_cop,
+        free_shipping_applied: totals.free_shipping_applied,
+        free_shipping_rule: totals.free_shipping_rule,
       });
       return;
     }

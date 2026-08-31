@@ -5,6 +5,7 @@
 
 const { isAuthenticated } = require('../../lib/auth');
 const { sql, ensureSchema, isConfigured } = require('../../lib/db');
+const { getFreeShippingRule, setFreeShippingRule } = require('../../lib/shipping-rule');
 
 function parseBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
@@ -46,7 +47,21 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET') {
       const rows = await sql`SELECT * FROM shipping_rates ORDER BY sort_order ASC, id ASC`;
-      res.status(200).json({ rates: rows });
+      const free_shipping_rule = await getFreeShippingRule();
+      res.status(200).json({ rates: rows, free_shipping_rule });
+      return;
+    }
+
+    // La regla de envío gratis vive en la misma función (y no en un endpoint
+    // aparte) para no sumar otra función serverless al límite de Vercel Hobby.
+    if (req.method === 'PUT') {
+      const body = parseBody(req);
+      try {
+        const rule = await setFreeShippingRule(body);
+        res.status(200).json({ free_shipping_rule: rule });
+      } catch (err) {
+        res.status(400).json({ error: 'invalid_input', message: err.message });
+      }
       return;
     }
 

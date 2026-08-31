@@ -34,6 +34,30 @@
   <div class="container">
 
     <div class="admin-panel" style="margin-bottom:1.4rem;">
+      <div class="admin-panel-head"><h2>Envío gratis por promoción</h2></div>
+      <form id="ruleForm" class="admin-form">
+        <div class="admin-form-field" style="margin-bottom:0.8rem;">
+          <label><input type="checkbox" id="rEnabled"> Activar envío gratis automático</label>
+        </div>
+        <div class="admin-form-grid">
+          <div class="admin-form-field">
+            <label for="rMinQuantity">A partir de tantos productos (unidades)</label>
+            <input id="rMinQuantity" type="number" min="1" step="1" placeholder="Ej: 3">
+          </div>
+          <div class="admin-form-field">
+            <label for="rMinSubtotal">O a partir de este subtotal (COP)</label>
+            <input id="rMinSubtotal" type="number" min="1" step="1" placeholder="Ej: 100000">
+          </div>
+        </div>
+        <p class="admin-form-hint">Deja un campo vacío si no aplica esa condición. Si llenas ambos, basta con cumplir cualquiera de las dos para que el envío quede gratis.</p>
+        <div class="admin-form-error" id="ruleError"></div>
+        <div class="admin-form-actions">
+          <button type="submit" class="btn btn-primary btn-sm">Guardar regla</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-panel" style="margin-bottom:1.4rem;">
       <div class="admin-panel-head"><h2>Nueva tarifa de envío</h2></div>
       <form id="rateForm" class="admin-form">
         <div class="admin-form-grid">
