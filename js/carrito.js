@@ -39,7 +39,7 @@ function renderLines() {
     line.className = 'cart-line';
 
     const img = document.createElement('img');
-    img.src = it.image || 'img/producto-bolsa-500g.png';
+    img.src = it.image || 'img/product/cafe-aru.webp';
     img.alt = it.name;
     line.appendChild(img);
 

@@ -25,7 +25,7 @@ function setupGallery(images) {
       thumbsWrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       mainImg.style.opacity = 0;
-      setTimeout(() => { mainImg.src = img.url; mainImg.style.opacity = 1; }, 220);
+      setTimeout(() => { mainImg.src = img.url; mainImg.style.opacity = 1; }, 250);
     });
     thumbsWrap.appendChild(btn);
   });
@@ -53,7 +53,7 @@ function renderProduct(product) {
   document.getElementById('tabDescLong').textContent = product.description || '';
   document.getElementById('stickyName').textContent = product.name;
   document.getElementById('stickyPrice').textContent = '$' + formatCOP(product.price_cop);
-  document.getElementById('stickyImg').src = product.images && product.images[0] ? product.images[0].url : 'img/producto-bolsa-500g.png';
+  document.getElementById('stickyImg').src = product.images && product.images[0] ? product.images[0].url : 'img/product/cafe-aru.webp';
 
   const tagsWrap = document.getElementById('prodTags');
   tagsWrap.innerHTML = '';

@@ -9,7 +9,7 @@ const CART_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 
 function renderProductCard(product) {
   const soldOut = product.stock <= 0;
-  const cover = product.images && product.images[0] ? product.images[0].url : 'img/producto-bolsa-500g.png';
+  const cover = product.images && product.images[0] ? product.images[0].url : 'img/product/cafe-aru.webp';
   const tags = product.flavor_tags || [];
 
   const card = document.createElement('article');
