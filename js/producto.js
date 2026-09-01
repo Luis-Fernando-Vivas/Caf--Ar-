@@ -32,8 +32,21 @@ function setupGallery(images) {
 }
 
 function renderProduct(product) {
-  document.getElementById('pageTitle').textContent = `${product.name} — Comprar | Café Arú`;
-  document.getElementById('pageDescription').content = `Compra ${product.name}: ${product.description || ''}`.slice(0, 155);
+  const title = `${product.name} — Comprar | Café Arú`;
+  const description = `Compra ${product.name}: ${product.description || ''}`.slice(0, 155);
+  const url = 'https://www.coffeearu.com/producto?slug=' + encodeURIComponent(product.slug);
+  const image = product.images && product.images[0] ? product.images[0].url : 'https://www.coffeearu.com/img/product/cafe-aru.webp';
+
+  document.getElementById('pageTitle').textContent = title;
+  document.getElementById('pageDescription').content = description;
+  document.getElementById('pageCanonical').href = url;
+  document.getElementById('ogTitle').content = title;
+  document.getElementById('ogDescription').content = description;
+  document.getElementById('ogUrl').content = url;
+  document.getElementById('ogImage').content = image;
+  document.getElementById('twitterTitle').content = title;
+  document.getElementById('twitterDescription').content = description;
+  document.getElementById('twitterImage').content = image;
   document.getElementById('prodName').textContent = product.name;
   document.getElementById('prodPrice').textContent = '$' + formatCOP(product.price_cop);
 

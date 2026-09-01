@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /carrito
+Disallow: /gracias
+Disallow: /api/
+
+Sitemap: https://www.coffeearu.com/sitemap.xml
