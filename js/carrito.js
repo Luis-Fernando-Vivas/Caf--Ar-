@@ -1,6 +1,6 @@
 /* Café Arú — página de carrito y checkout */
 
-const WHATSAPP_NUMBER = '573208022813';
+const WHATSAPP_NUMBER = '573132834162';
 
 let shippingRates = [];
 let selectedShippingId = null;
