@@ -246,6 +246,14 @@ async function checkout(channel) {
   errorEl.textContent = '';
   if (!items.length) return;
 
+  const customerName = document.getElementById('customerName').value.trim();
+  const customerAddress = document.getElementById('customerAddress').value.trim();
+  const customerPhone = document.getElementById('customerPhone').value.trim();
+  if (!customerName || !customerAddress || !customerPhone) {
+    errorEl.textContent = 'Completa nombre, dirección y teléfono para poder enviarte el pedido.';
+    return;
+  }
+
   const wompiBtn = document.getElementById('payWompiBtn');
   const waBtn = document.getElementById('payWhatsappBtn');
   wompiBtn.disabled = true;
@@ -260,6 +268,9 @@ async function checkout(channel) {
         shipping_rate_id: selectedShippingId,
         coupon_code: appliedCoupon || undefined,
         channel,
+        customer_name: customerName,
+        customer_address: customerAddress,
+        customer_phone: customerPhone,
       }),
     });
     const data = await res.json();
@@ -277,6 +288,7 @@ async function checkout(channel) {
         reference: data.reference,
         'signature:integrity': data.signature,
         'redirect-url': redirectUrl,
+        'collect-shipping-address': 'true',
       });
       window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
       return;

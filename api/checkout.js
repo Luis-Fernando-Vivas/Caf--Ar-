@@ -33,6 +33,14 @@ module.exports = async (req, res) => {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const channel = body.channel === 'whatsapp' ? 'whatsapp' : 'wompi';
 
+  const customerName = String(body.customer_name || '').trim().slice(0, 200);
+  const customerAddress = String(body.customer_address || '').trim().slice(0, 300);
+  const customerPhone = String(body.customer_phone || '').trim().slice(0, 40);
+  if (!body.preview && (!customerName || !customerAddress || !customerPhone)) {
+    res.status(400).json({ error: 'missing_customer_data', message: 'Faltan nombre, dirección o teléfono del cliente.' });
+    return;
+  }
+
   try {
     await ensureSchema();
 
@@ -84,12 +92,14 @@ module.exports = async (req, res) => {
     const orderRows = await sql`
       INSERT INTO orders (
         reference, channel, status, quantity, unit_price_cop, amount_cop, environment,
-        shipping_rate_id, shipping_name, shipping_cop, coupon_code, discount_cop, subtotal_cop
+        shipping_rate_id, shipping_name, shipping_cop, coupon_code, discount_cop, subtotal_cop,
+        customer_name, customer_address, customer_phone
       )
       VALUES (
         ${reference}, ${channel}, ${status}, ${totalQuantity}, 0, ${totals.amount_cop}, ${environment || 'prod'},
         ${body.shipping_rate_id || null}, ${totals.shipping_name}, ${totals.shipping_cop},
-        ${totals.coupon ? totals.coupon.code : null}, ${totals.discount_cop}, ${totals.subtotal_cop}
+        ${totals.coupon ? totals.coupon.code : null}, ${totals.discount_cop}, ${totals.subtotal_cop},
+        ${customerName || null}, ${customerAddress || null}, ${customerPhone || null}
       )
       RETURNING id
     `;
@@ -123,6 +133,9 @@ module.exports = async (req, res) => {
     if (totals.shipping_name) whatsappMessage += `\nEnvío (${totals.shipping_name}): $${formatCOP(totals.shipping_cop)}`;
     if (totals.discount_cop > 0) whatsappMessage += `\nDescuento (${totals.coupon.code}): -$${formatCOP(totals.discount_cop)}`;
     whatsappMessage += `\nTotal: $${formatCOP(totals.amount_cop)} COP`;
+    whatsappMessage += `\n\nNombre: ${customerName}`;
+    whatsappMessage += `\nDirección: ${customerAddress}`;
+    whatsappMessage += `\nTeléfono: ${customerPhone}`;
     whatsappMessage += `\n¿Me ayudan a confirmar el pedido y el envío?`;
 
     res.status(200).json({ reference, whatsappMessage });

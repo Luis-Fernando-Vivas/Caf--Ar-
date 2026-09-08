@@ -406,6 +406,14 @@ function renderOrders(orders){
     const tdRef = document.createElement('td');
     tdRef.textContent = o.reference;
 
+    const tdCustomer = document.createElement('td');
+    if (o.customer_name || o.customer_email) {
+      tdCustomer.textContent = o.customer_name || o.customer_email;
+      tdCustomer.title = [o.customer_email, o.customer_phone, o.customer_address].filter(Boolean).join(' · ');
+    } else {
+      tdCustomer.textContent = '—';
+    }
+
     const tdChannel = document.createElement('td');
     tdChannel.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
 
@@ -461,7 +469,7 @@ function renderOrders(orders){
     select.addEventListener('change', () => updateStatus(o.id, select.value, select));
     tdAction.appendChild(select);
 
-    tr.append(tdRef, tdChannel, tdEnv, tdItems, tdStatus, tdQty, tdAmount, tdDate, tdAction);
+    tr.append(tdRef, tdCustomer, tdChannel, tdEnv, tdItems, tdStatus, tdQty, tdAmount, tdDate, tdAction);
     tbody.appendChild(tr);
   });
 }

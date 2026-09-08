@@ -36,7 +36,8 @@ module.exports = async (req, res) => {
       const rows = await sql`
         SELECT id, reference, channel, status, quantity, unit_price_cop, amount_cop,
                wompi_transaction_id, environment, shipping_name, shipping_cop,
-               coupon_code, discount_cop, subtotal_cop, created_at, updated_at
+               coupon_code, discount_cop, subtotal_cop, customer_name, customer_email,
+               customer_phone, customer_address, created_at, updated_at
         FROM orders
         ORDER BY created_at DESC
         LIMIT 300
