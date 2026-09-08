@@ -110,13 +110,9 @@
                 <th>Referencia</th>
                 <th>Cliente</th>
                 <th>Canal</th>
-                <th>Entorno</th>
-                <th>Productos</th>
                 <th>Estado</th>
-                <th>Cant.</th>
                 <th>Monto</th>
                 <th>Fecha</th>
-                <th>Cambiar estado</th>
               </tr>
             </thead>
             <tbody id="ordersBody"></tbody>
@@ -130,6 +126,36 @@
 </div>
 
 <div id="vizTooltip" class="viz-tooltip" role="status" aria-live="polite"></div>
+
+<div id="orderModalOverlay" class="modal-overlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalOrderRef">
+    <div class="modal-head">
+      <div>
+        <h2 id="modalOrderRef">—</h2>
+        <div id="modalOrderBadges" class="modal-badges"></div>
+      </div>
+      <button id="modalCloseBtn" class="modal-close" type="button" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3>Cliente</h3>
+        <dl id="modalCustomer" class="modal-dl"></dl>
+      </div>
+      <div class="modal-section">
+        <h3>Productos</h3>
+        <table class="modal-items-table"><tbody id="modalItems"></tbody></table>
+      </div>
+      <div class="modal-section">
+        <h3>Resumen</h3>
+        <dl id="modalTotals" class="modal-dl modal-totals"></dl>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <label for="modalStatusSelect">Estado del pedido</label>
+      <select id="modalStatusSelect"></select>
+    </div>
+  </div>
+</div>
 
 <script src="../js/admin.js"></script>
 </body>

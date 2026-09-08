@@ -26,17 +26,21 @@
 .admin-login-card .btn{ width:100%; }
 
 /* ---------- shell: sidebar + contenido (estilo tipo Shopify) ---------- */
-.admin-shell{ display:flex; min-height:100vh; align-items:stretch; }
+/* El sidebar es "position:fixed" (no sticky) a propósito: con sticky, un
+   contenido más alto que 100vh hace que el sidebar se "despegue" del top al
+   hacer scroll y deje ver el fondo detrás. Fixed lo saca del flujo por
+   completo y siempre cubre los 100vh, sin importar qué tan larga sea la página. */
+.admin-shell{ min-height:100vh; }
 
 .admin-sidebar{
-  width:236px; flex-shrink:0; background:var(--c-black); color:var(--c-cream);
-  display:flex; flex-direction:column; position:sticky; top:0; align-self:flex-start; height:100vh;
+  width:236px; background:var(--c-black); color:var(--c-cream);
+  display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:20;
 }
-.admin-sidebar-brand{ display:flex; align-items:center; gap:.65rem; padding:1.5rem 1.4rem 1.2rem; }
+.admin-sidebar-brand{ display:flex; align-items:center; gap:.65rem; padding:1.5rem 1.4rem 1.2rem; flex-shrink:0; }
 .admin-sidebar-brand img{ height:26px; }
 .admin-sidebar-brand span{ font-family:var(--font-display); font-size:1rem; color:var(--c-kraft-light); letter-spacing:.01em; }
 
-.admin-nav-links{ display:flex; flex-direction:column; gap:.15rem; padding:.5rem .9rem; flex:1; }
+.admin-nav-links{ display:flex; flex-direction:column; gap:.15rem; padding:.5rem .9rem; flex:1; overflow-y:auto; }
 .admin-nav-links a{
   display:flex; align-items:center; gap:.75em; color:rgba(248,242,228,.68); text-decoration:none;
   font-size:.87rem; font-weight:600; padding:.62em .85em; border-radius:10px;
@@ -47,10 +51,10 @@
 .admin-nav-links a.is-active{ background:var(--c-red); color:var(--c-white); }
 .admin-nav-links a.is-active svg{ opacity:1; }
 
-.admin-sidebar-foot{ padding:1rem .9rem 1.3rem; border-top:1px solid rgba(255,255,255,.08); }
+.admin-sidebar-foot{ padding:1rem .9rem 1.3rem; border-top:1px solid rgba(255,255,255,.08); flex-shrink:0; }
 .admin-sidebar-foot .btn{ width:100%; }
 
-.admin-content{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--c-cream); }
+.admin-content{ min-width:0; display:flex; flex-direction:column; background:var(--c-cream); margin-left:236px; min-height:100vh; }
 
 .admin-topbar{
   position:sticky; top:0; z-index:10; background:var(--c-white); border-bottom:1px solid rgba(36,27,18,.08);
@@ -62,14 +66,14 @@
 .admin-main{ flex:1; padding:1.8rem 2.2rem 3.6rem; width:100%; }
 
 @media (max-width:900px){
-  .admin-shell{ flex-direction:column; }
   .admin-sidebar{ width:100%; height:auto; position:static; flex-direction:row; align-items:center; padding:.3rem .5rem; }
   .admin-sidebar-brand{ padding:.5rem .6rem; }
   .admin-sidebar-brand span{ display:none; }
-  .admin-nav-links{ flex-direction:row; overflow-x:auto; padding:.3rem; flex:1; }
+  .admin-nav-links{ flex-direction:row; overflow-x:auto; overflow-y:visible; padding:.3rem; flex:1; }
   .admin-nav-links a{ white-space:nowrap; }
   .admin-sidebar-foot{ border-top:none; padding:.4rem .6rem; }
   .admin-sidebar-foot .btn{ width:auto; }
+  .admin-content{ margin-left:0; }
   .admin-main{ padding:1.4rem 1.1rem 3rem; }
   .admin-topbar{ padding:.9rem 1.1rem; }
 }
@@ -100,6 +104,7 @@
 }
 .env-badge.env-test{ background:rgba(255,205,53,.2); color:var(--c-kraft-dark); }
 .env-badge.env-prod{ background:rgba(179,32,39,.12); color:var(--c-red); }
+.env-badge.badge-neutral{ background:rgba(36,27,18,.08); color:var(--c-text-soft); }
 
 /* ---------- stat cards ---------- */
 .admin-stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.4rem; }
@@ -171,8 +176,8 @@
 .admin-panel-head h2{ font-size:1.05rem; font-family:var(--font-display); font-weight:600; }
 
 .admin-table-wrap{ overflow-x:auto; }
-table.admin-table{ width:100%; border-collapse:collapse; font-size:.87rem; min-width:760px; }
-.admin-table th, .admin-table td{ text-align:left; padding:.85rem 1.5rem; white-space:nowrap; }
+table.admin-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-width:640px; }
+.admin-table th, .admin-table td{ text-align:left; padding:.55rem 1.5rem; white-space:nowrap; }
 .admin-table thead th{
   font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--c-text-soft);
   border-bottom:1px solid rgba(36,27,18,.08); background:var(--c-cream);
@@ -184,6 +189,13 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.87rem; min-w
   padding:.4em .7em; border-radius:8px; border:1px solid rgba(36,27,18,.18); font-family:inherit; font-size:.82rem;
   background:var(--c-white);
 }
+
+/* filas de pedidos: compactas y clicables (abren el modal de detalle) */
+.admin-table tbody tr.is-clickable{ cursor:pointer; }
+.admin-table td.cell-ref{ font-size:.8rem; color:var(--c-text-soft); }
+.admin-table td.cell-channel{ display:table-cell; }
+.cell-channel-wrap{ display:flex; align-items:center; gap:.5em; }
+.cell-channel-wrap .env-badge{ padding:.2em .55em; font-size:.64rem; }
 
 .status-badge{
   display:inline-flex; align-items:center; gap:.4em; padding:.35em .8em; border-radius:100px;
@@ -250,3 +262,59 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.87rem; min-w
 .admin-inline-actions button.danger:hover{ color:var(--c-red); }
 
 .admin-table img.admin-row-thumb{ width:42px; height:42px; object-fit:cover; border-radius:8px; vertical-align:middle; }
+
+/* ---------- modal de detalle de pedido ---------- */
+.modal-overlay{
+  position:fixed; inset:0; z-index:100; background:rgba(23,17,12,.5);
+  display:flex; align-items:flex-start; justify-content:center; padding:5vh 1.2rem;
+  overflow-y:auto;
+}
+.modal-overlay[hidden]{ display:none; }
+
+.modal-card{
+  width:100%; max-width:620px; background:var(--c-white); border-radius:16px;
+  box-shadow:0 30px 70px -20px rgba(23,17,12,.45); overflow:hidden;
+}
+.modal-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
+  padding:1.3rem 1.5rem 1.1rem; border-bottom:1px solid rgba(36,27,18,.08);
+}
+.modal-head h2{ font-family:var(--font-display); font-size:1.15rem; margin:0 0 .5rem; }
+.modal-badges{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.modal-close{
+  border:none; background:var(--c-cream); color:var(--c-text); width:30px; height:30px; border-radius:100px;
+  font-size:1.1rem; line-height:1; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+}
+.modal-close:hover{ background:var(--c-kraft-light); }
+
+.modal-body{ padding:1.3rem 1.5rem; max-height:60vh; overflow-y:auto; }
+.modal-section{ margin-bottom:1.4rem; }
+.modal-section:last-child{ margin-bottom:0; }
+.modal-section h3{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--c-text-soft);
+  margin:0 0 .6rem;
+}
+.modal-dl{ margin:0; display:grid; grid-template-columns:auto 1fr; gap:.4rem 1rem; font-size:.88rem; }
+.modal-dl dt{ color:var(--c-text-soft); }
+.modal-dl dd{ margin:0; color:var(--c-text); }
+
+.modal-items-table{ width:100%; border-collapse:collapse; font-size:.86rem; }
+.modal-items-table td{ padding:.45rem 0; border-bottom:1px solid rgba(36,27,18,.06); }
+.modal-items-table tr:last-child td{ border-bottom:none; }
+.modal-items-table td.item-qty{ color:var(--c-text-soft); width:3.5em; }
+.modal-items-table td.item-total{ text-align:right; white-space:nowrap; }
+
+.modal-totals dd{ text-align:right; }
+.modal-totals .modal-total-row dt, .modal-totals .modal-total-row dd{
+  font-family:var(--font-display); font-size:1.05rem; font-weight:600; color:var(--c-black); padding-top:.4rem;
+}
+
+.modal-foot{
+  padding:1.1rem 1.5rem 1.3rem; border-top:1px solid rgba(36,27,18,.08);
+  display:flex; align-items:center; gap:.8rem; flex-wrap:wrap;
+}
+.modal-foot label{ font-size:.82rem; font-weight:600; color:var(--c-text-soft); }
+.modal-foot select{
+  padding:.5em .8em; border-radius:8px; border:1px solid rgba(36,27,18,.18); font-family:inherit; font-size:.86rem;
+  background:var(--c-cream); color:var(--c-text);
+}

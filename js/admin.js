@@ -402,44 +402,33 @@ function renderOrders(orders){
 
   orders.forEach((o) => {
     const tr = document.createElement('tr');
+    tr.className = 'is-clickable';
+    tr.tabIndex = 0;
+    tr.setAttribute('role', 'button');
+    tr.setAttribute('aria-label', `Ver detalle del pedido ${o.reference}`);
 
     const tdRef = document.createElement('td');
+    tdRef.className = 'cell-ref';
     tdRef.textContent = o.reference;
 
     const tdCustomer = document.createElement('td');
-    if (o.customer_name || o.customer_email) {
-      tdCustomer.textContent = o.customer_name || o.customer_email;
-      tdCustomer.title = [o.customer_email, o.customer_phone, o.customer_address].filter(Boolean).join(' · ');
-    } else {
-      tdCustomer.textContent = '—';
-    }
+    tdCustomer.textContent = o.customer_name || o.customer_email || '—';
 
     const tdChannel = document.createElement('td');
-    tdChannel.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
-
-    const tdEnv = document.createElement('td');
+    tdChannel.className = 'cell-channel';
+    const channelWrap = document.createElement('span');
+    channelWrap.className = 'cell-channel-wrap';
+    const channelText = document.createElement('span');
+    channelText.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
+    channelWrap.appendChild(channelText);
     if (o.channel === 'wompi') {
       const envBadge = document.createElement('span');
       const env = o.environment === 'test' ? 'test' : 'prod';
       envBadge.className = 'env-badge env-' + env;
       envBadge.textContent = ENV_LABELS[env];
-      tdEnv.appendChild(envBadge);
-    } else {
-      tdEnv.textContent = '—';
+      channelWrap.appendChild(envBadge);
     }
-
-    const tdItems = document.createElement('td');
-    if (o.items && o.items.length) {
-      tdItems.textContent = o.items.map((it) => `${it.quantity}x ${it.product_name}`).join(', ');
-      const parts = [];
-      if (o.subtotal_cop) parts.push(`Subtotal: $${formatCOP(o.subtotal_cop)}`);
-      if (o.shipping_name) parts.push(`Envío (${o.shipping_name}): $${formatCOP(o.shipping_cop)}`);
-      if (o.coupon_code) parts.push(`Cupón ${o.coupon_code}: -$${formatCOP(o.discount_cop)}`);
-      tdItems.title = parts.join(' · ');
-    } else {
-      tdItems.textContent = '—';
-      tdItems.title = 'Pedido registrado antes de tener catálogo de productos.';
-    }
+    tdChannel.appendChild(channelWrap);
 
     const tdStatus = document.createElement('td');
     const badge = document.createElement('span');
@@ -447,29 +436,17 @@ function renderOrders(orders){
     badge.textContent = STATUS_LABELS[o.status] || o.status;
     tdStatus.appendChild(badge);
 
-    const tdQty = document.createElement('td');
-    tdQty.textContent = o.quantity;
-
     const tdAmount = document.createElement('td');
     tdAmount.textContent = '$' + formatCOP(o.amount_cop) + ' COP';
 
     const tdDate = document.createElement('td');
     tdDate.textContent = new Date(o.created_at).toLocaleString('es-CO');
 
-    const tdAction = document.createElement('td');
-    const select = document.createElement('select');
-    select.dataset.id = o.id;
-    STATUS_OPTIONS.forEach((s) => {
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = STATUS_LABELS[s];
-      if (s === o.status) opt.selected = true;
-      select.appendChild(opt);
+    tr.append(tdRef, tdCustomer, tdChannel, tdStatus, tdAmount, tdDate);
+    tr.addEventListener('click', () => openOrderModal(o));
+    tr.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); openOrderModal(o); }
     });
-    select.addEventListener('change', () => updateStatus(o.id, select.value, select));
-    tdAction.appendChild(select);
-
-    tr.append(tdRef, tdCustomer, tdChannel, tdEnv, tdItems, tdStatus, tdQty, tdAmount, tdDate, tdAction);
     tbody.appendChild(tr);
   });
 }
@@ -486,6 +463,101 @@ async function updateStatus(id, status, selectEl){
   } finally {
     selectEl.disabled = false;
   }
+}
+
+/* ---------------- modal de detalle de pedido ---------------- */
+function openOrderModal(o){
+  const overlay = document.getElementById('orderModalOverlay');
+
+  document.getElementById('modalOrderRef').textContent = o.reference;
+
+  const badges = document.getElementById('modalOrderBadges');
+  badges.innerHTML = '';
+  const statusBadge = document.createElement('span');
+  statusBadge.className = 'status-badge st-' + o.status;
+  statusBadge.textContent = STATUS_LABELS[o.status] || o.status;
+  badges.appendChild(statusBadge);
+  const channelBadge = document.createElement('span');
+  channelBadge.className = 'env-badge badge-neutral';
+  channelBadge.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
+  badges.appendChild(channelBadge);
+  if (o.channel === 'wompi') {
+    const env = o.environment === 'test' ? 'test' : 'prod';
+    const envBadge = document.createElement('span');
+    envBadge.className = 'env-badge env-' + env;
+    envBadge.textContent = ENV_LABELS[env];
+    badges.appendChild(envBadge);
+  }
+
+  const customerDl = document.getElementById('modalCustomer');
+  customerDl.innerHTML = '';
+  const customerRows = [
+    ['Nombre', o.customer_name],
+    ['Email', o.customer_email],
+    ['Teléfono', o.customer_phone],
+    ['Dirección', o.customer_address],
+    ['Pedido creado', new Date(o.created_at).toLocaleString('es-CO')],
+  ];
+  customerRows.forEach(([label, value]) => {
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value || '—';
+    customerDl.append(dt, dd);
+  });
+
+  const itemsBody = document.getElementById('modalItems');
+  itemsBody.innerHTML = '';
+  (o.items || []).forEach((it) => {
+    const tr = document.createElement('tr');
+    const tdName = document.createElement('td'); tdName.textContent = it.product_name;
+    const tdQty = document.createElement('td'); tdQty.className = 'item-qty'; tdQty.textContent = `${it.quantity}x`;
+    const tdTotal = document.createElement('td'); tdTotal.className = 'item-total'; tdTotal.textContent = '$' + formatCOP(it.line_total_cop);
+    tr.append(tdName, tdQty, tdTotal);
+    itemsBody.appendChild(tr);
+  });
+  if (!o.items || !o.items.length) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td'); td.colSpan = 3; td.textContent = 'Pedido registrado antes de tener catálogo de productos.';
+    tr.appendChild(td);
+    itemsBody.appendChild(tr);
+  }
+
+  const totalsDl = document.getElementById('modalTotals');
+  totalsDl.innerHTML = '';
+  const addTotalRow = (label, value, isTotal) => {
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value;
+    if (isTotal) { dt.classList.add('modal-total-row'); dd.classList.add('modal-total-row'); }
+    totalsDl.append(dt, dd);
+  };
+  addTotalRow('Subtotal', '$' + formatCOP(o.subtotal_cop));
+  if (o.shipping_name) addTotalRow(`Envío (${o.shipping_name})`, '$' + formatCOP(o.shipping_cop));
+  if (o.discount_cop > 0) addTotalRow(`Descuento${o.coupon_code ? ` (${o.coupon_code})` : ''}`, '-$' + formatCOP(o.discount_cop));
+  addTotalRow('Total', '$' + formatCOP(o.amount_cop) + ' COP', true);
+
+  const statusSelect = document.getElementById('modalStatusSelect');
+  statusSelect.innerHTML = '';
+  STATUS_OPTIONS.forEach((s) => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = STATUS_LABELS[s];
+    if (s === o.status) opt.selected = true;
+    statusSelect.appendChild(opt);
+  });
+  statusSelect.onchange = () => updateStatus(o.id, statusSelect.value, statusSelect);
+
+  overlay.hidden = false;
+}
+
+function closeOrderModal(){
+  document.getElementById('orderModalOverlay').hidden = true;
+}
+
+function initOrderModal(){
+  const overlay = document.getElementById('orderModalOverlay');
+  if (!overlay) return;
+  document.getElementById('modalCloseBtn').addEventListener('click', closeOrderModal);
+  overlay.addEventListener('click', (evt) => { if (evt.target === overlay) closeOrderModal(); });
+  document.addEventListener('keydown', (evt) => { if (evt.key === 'Escape' && !overlay.hidden) closeOrderModal(); });
 }
 
 async function loadOrders(){
@@ -587,6 +659,7 @@ function initDashboardPage(){
   loadOrders();
   loadWompiEnv();
   initWompiEnvSwitch();
+  initOrderModal();
 
   document.getElementById('refreshBtn')?.addEventListener('click', () => { loadOrders(); loadWompiEnv(); });
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
