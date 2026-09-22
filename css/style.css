@@ -904,6 +904,13 @@ section{ position:relative; }
 .tab-panel li{ display:flex; justify-content:space-between; padding:.6rem 0; border-bottom:1px dashed rgba(36,27,18,.12); font-size:.9rem; }
 .tab-panel li strong{ color:var(--c-text-soft); font-weight:500; }
 
+.prep-methods{ display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; }
+.prep-method{ background:var(--c-cream-2); border-radius:20px; padding:1.6rem 1.8rem; }
+.prep-method h3{ font-family:var(--font-display); font-size:1.15rem; margin:0 0 .8rem; }
+.prep-method ul{ display:block; }
+.prep-method li:last-child{ border-bottom:none; }
+@media (max-width:640px){ .prep-methods{ grid-template-columns:1fr; } }
+
 /* ===================================================================
    Team / founders
 =================================================================== */
