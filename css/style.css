@@ -37,7 +37,10 @@ body{
   background:var(--c-cream);
   color:var(--c-text);
   -webkit-font-smoothing:antialiased;
+  /* clip (no hidden): con html también en hidden, hidden aquí convierte al
+     body en contenedor de scroll y rompe position:sticky (galería de producto). */
   overflow-x:hidden;
+  overflow-x:clip;
   width:100%;
 }
 img{ max-width:100%; display:block; }
