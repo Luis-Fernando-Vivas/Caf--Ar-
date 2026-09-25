@@ -296,7 +296,6 @@ async function checkout(channel) {
         reference: data.reference,
         'signature:integrity': data.signature,
         'redirect-url': redirectUrl,
-        'collect-shipping-address': 'true',
       });
       if (window.Analytics) {
         Analytics.savePendingPurchase({
