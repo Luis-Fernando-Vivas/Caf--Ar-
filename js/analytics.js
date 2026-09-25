@@ -86,6 +86,10 @@ const Analytics = {
   },
 };
 
+// Un `const` global no queda como propiedad de window, y los demás scripts
+// comprueban `window.Analytics` antes de enviar eventos.
+window.Analytics = Analytics;
+
 // Clics a cualquier enlace de WhatsApp (footer, botones de ayuda, etc.).
 document.addEventListener('click', (e) => {
   const link = e.target.closest && e.target.closest('a[href*="wa.me/"]');
