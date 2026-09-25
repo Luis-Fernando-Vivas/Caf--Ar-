@@ -200,11 +200,13 @@ function renderProduct(product) {
   } else {
     addBtn.addEventListener('click', () => {
       Cart.add(product, qty, selectedVariant);
+      Cart.showAddedToast(product.name);
       addBtn.textContent = 'Añadido ✓';
       setTimeout(() => { addBtn.textContent = 'Añadir al carrito'; }, 1400);
     });
     stickyBtn.addEventListener('click', () => {
       Cart.add(product, qty, selectedVariant);
+      Cart.showAddedToast(product.name);
       stickyBtn.textContent = 'Añadido ✓';
       setTimeout(() => { stickyBtn.textContent = 'Añadir'; }, 1400);
     });

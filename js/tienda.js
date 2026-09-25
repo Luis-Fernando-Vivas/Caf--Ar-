@@ -106,6 +106,7 @@ function renderProductCard(product) {
   addBtn.addEventListener('click', (e) => {
     e.preventDefault();
     Cart.add(product, 1, defaultVariant);
+    Cart.showAddedToast(product.name);
     addBtn.textContent = 'Añadido ✓';
     setTimeout(() => { addBtn.innerHTML = 'Añadir al carrito ' + CART_ICON_SVG; }, 1400);
   });

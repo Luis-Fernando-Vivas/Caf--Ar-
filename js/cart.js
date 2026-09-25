@@ -79,6 +79,31 @@ const Cart = {
     cartWrite([]);
   },
 
+  // Aviso flotante tras "Añadir al carrito", con botón para ir al carrito.
+  // Se reutiliza el mismo elemento si el cliente agrega varias veces seguidas.
+  showAddedToast(productName) {
+    let toast = document.getElementById('cartToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'cartToast';
+      toast.className = 'cart-toast';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      toast.innerHTML =
+        '<div class="cart-toast-text"><strong>Añadido al carrito ✓</strong><span data-toast-name></span></div>' +
+        '<a href="/carrito" class="btn btn-primary btn-sm">Ir al carrito</a>' +
+        '<button type="button" class="cart-toast-close" aria-label="Cerrar">&times;</button>';
+      toast.querySelector('.cart-toast-close').addEventListener('click', () => toast.classList.remove('is-visible'));
+      document.body.appendChild(toast);
+    }
+    toast.querySelector('[data-toast-name]').textContent = productName || '';
+    // Forzar reflow para que la animación de entrada corra también al reaparecer.
+    void toast.offsetWidth;
+    toast.classList.add('is-visible');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove('is-visible'), 5000);
+  },
+
   updateBadge() {
     const count = Cart.getCount();
     document.querySelectorAll('[data-cart-count]').forEach((el) => {
