@@ -3,9 +3,9 @@
 // Borrar una tarifa nunca rompe pedidos viejos: el nombre y el monto quedan
 // guardados directamente en orders.shipping_name/shipping_cop al momento del checkout.
 
-const { isAuthenticated } = require('../../lib/auth');
-const { sql, ensureSchema, isConfigured } = require('../../lib/db');
-const { getFreeShippingRule, setFreeShippingRule } = require('../../lib/shipping-rule');
+const { isAuthenticated } = require('../_lib/auth');
+const { sql, ensureSchema, isConfigured } = require('../_lib/db');
+const { getFreeShippingRule, setFreeShippingRule } = require('../_lib/shipping-rule');
 
 function parseBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});

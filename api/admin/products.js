@@ -5,9 +5,9 @@
 // DELETE ?id=     -> borra el producto, o lo archiva si tiene pedidos asociados
 //                    (para no perder el historial de order_items).
 
-const { isAuthenticated } = require('../../lib/auth');
-const { sql, ensureSchema, isConfigured } = require('../../lib/db');
-const { slugify } = require('../../lib/slugify');
+const { isAuthenticated } = require('../_lib/auth');
+const { sql, ensureSchema, isConfigured } = require('../_lib/db');
+const { slugify } = require('../_lib/slugify');
 
 const ALLOWED_STATUSES = ['active', 'draft', 'archived'];
 const SLUG_RE = /^[a-z0-9-]+$/;

@@ -12,30 +12,96 @@ function setupGallery(images) {
   thumbsWrap.innerHTML = '';
 
   if (!images.length) return;
-  mainImg.src = images[0].url;
+  mainImg.src = cldImage(images[0].url, 'f_auto,q_auto,w_1000');
 
   images.forEach((img, i) => {
     const btn = document.createElement('button');
     if (i === 0) btn.className = 'active';
     const thumbImg = document.createElement('img');
-    thumbImg.src = img.url;
+    thumbImg.src = cldImage(img.url, 'f_auto,q_auto,w_200');
     thumbImg.alt = '';
+    thumbImg.loading = 'lazy';
     btn.appendChild(thumbImg);
     btn.addEventListener('click', () => {
       thumbsWrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       mainImg.style.opacity = 0;
-      setTimeout(() => { mainImg.src = img.url; mainImg.style.opacity = 1; }, 250);
+      setTimeout(() => { mainImg.src = cldImage(img.url, 'f_auto,q_auto,w_1000'); mainImg.style.opacity = 1; }, 250);
     });
     thumbsWrap.appendChild(btn);
   });
 }
 
+const SITE_URL = 'https://www.coffeearu.com';
+
+// Corta en el último espacio antes del límite, para que la meta description
+// no termine a mitad de palabra en los resultados de Google.
+function truncateWords(text, max) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  return cut.slice(0, cut.lastIndexOf(' ')).replace(/[,.;:\s]+$/, '') + '…';
+}
+
+function absoluteUrl(url) {
+  if (!url) return url;
+  return /^https?:\/\//.test(url) ? url : SITE_URL + '/' + url.replace(/^\//, '');
+}
+
+// Datos estructurados (schema.org) para que Google muestre precio,
+// disponibilidad y migas de pan en los resultados. Googlebot ejecuta JS, así
+// que los lee aunque se inyecten al cargar el producto.
+function injectStructuredData(product, url) {
+  const images = (product.images || []).map((img) => absoluteUrl(cldImage(img.url, 'f_auto,q_auto,w_1200')));
+  const data = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.description || '',
+      image: images.length ? images : [SITE_URL + '/img/product/cafe-aru.webp'],
+      sku: product.slug,
+      brand: { '@type': 'Brand', name: 'Café Arú' },
+      countryOfOrigin: 'CO',
+      offers: {
+        '@type': 'Offer',
+        url,
+        priceCurrency: 'COP',
+        price: product.price_cop,
+        availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        itemCondition: 'https://schema.org/NewCondition',
+        seller: { '@type': 'Organization', name: 'Café Arú' },
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'CO' },
+        },
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL + '/' },
+        { '@type': 'ListItem', position: 2, name: 'Tienda', item: SITE_URL + '/tienda' },
+        { '@type': 'ListItem', position: 3, name: product.name, item: url },
+      ],
+    },
+  ];
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(data);
+  document.head.appendChild(script);
+}
+
 function renderProduct(product) {
-  const title = `${product.name} — Comprar | Café Arú`;
-  const description = `Compra ${product.name}: ${product.description || ''}`.slice(0, 155);
-  const url = 'https://www.coffeearu.com/producto?slug=' + encodeURIComponent(product.slug);
-  const image = product.images && product.images[0] ? product.images[0].url : 'https://www.coffeearu.com/img/product/cafe-aru.webp';
+  const title = `${product.name} — Café Honey de Huila | Café Arú`;
+  const description = truncateWords(`Compra ${product.name}: ${product.description || ''}`, 155);
+  const url = SITE_URL + '/producto?slug=' + encodeURIComponent(product.slug);
+  // Versión JPG 1200x630 y liviana: WhatsApp/Facebook no muestran vista
+  // previa de imágenes pesadas (el original pesa ~1 MB).
+  const image = product.images && product.images[0]
+    ? absoluteUrl(cldImage(product.images[0].url, 'c_fill,w_1200,h_630,f_jpg,q_auto'))
+    : SITE_URL + '/img/product/cafe-aru.webp';
 
   document.getElementById('pageTitle').textContent = title;
   document.getElementById('pageDescription').content = description;
@@ -48,6 +114,11 @@ function renderProduct(product) {
   document.getElementById('twitterDescription').content = description;
   document.getElementById('twitterImage').content = image;
   document.getElementById('prodName').textContent = product.name;
+  document.getElementById('galleryMain').alt = product.name;
+  injectStructuredData(product, url);
+  if (window.Analytics) {
+    Analytics.ecommerce('view_item', [Analytics.productItem(product)], product.price_cop);
+  }
   document.getElementById('prodPrice').textContent = '$' + formatCOP(product.price_cop);
 
   const compareEl = document.getElementById('prodComparePrice');
@@ -66,7 +137,7 @@ function renderProduct(product) {
   document.getElementById('tabDescLong').textContent = product.description || '';
   document.getElementById('stickyName').textContent = product.name;
   document.getElementById('stickyPrice').textContent = '$' + formatCOP(product.price_cop);
-  document.getElementById('stickyImg').src = product.images && product.images[0] ? product.images[0].url : 'img/product/cafe-aru.webp';
+  document.getElementById('stickyImg').src = product.images && product.images[0] ? cldImage(product.images[0].url, 'f_auto,q_auto,w_160') : 'img/product/cafe-aru.webp';
 
   const tagsWrap = document.getElementById('prodTags');
   tagsWrap.innerHTML = '';
@@ -157,6 +228,11 @@ async function loadProduct() {
     const { product } = await res.json();
     renderProduct(product);
   } catch {
+    // Que Google no indexe la página "No encontramos ese producto".
+    const robots = document.createElement('meta');
+    robots.name = 'robots';
+    robots.content = 'noindex';
+    document.head.appendChild(robots);
     document.getElementById('productLoading').style.display = 'none';
     document.getElementById('productNotFound').style.display = '';
   }

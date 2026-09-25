@@ -2,8 +2,8 @@
 // GET / POST {code,discount_type,discount_value,min_order_cop,usage_limit,expires_at,is_active}
 // PATCH {id,...} / DELETE ?id=
 
-const { isAuthenticated } = require('../../lib/auth');
-const { sql, ensureSchema, isConfigured } = require('../../lib/db');
+const { isAuthenticated } = require('../_lib/auth');
+const { sql, ensureSchema, isConfigured } = require('../_lib/db');
 
 const DISCOUNT_TYPES = ['percent', 'fixed'];
 

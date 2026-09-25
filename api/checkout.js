@@ -3,7 +3,7 @@
 // POST { items:[{product_id, quantity}], shipping_rate_id, coupon_code, channel, preview }
 //
 // Nunca confía en precios/descuentos que mande el navegador: recalcula todo
-// desde la base de datos con lib/checkout.js#computeTotals, exactamente igual
+// desde la base de datos con api/_lib/checkout.js#computeTotals, exactamente igual
 // para el canal Wompi y el canal WhatsApp.
 //
 // preview:true (usado por carrito.html para mostrar el total en vivo) calcula
@@ -12,9 +12,15 @@
 // serverless aparte (Vercel Hobby limita a 12 por deployment).
 
 const crypto = require('crypto');
-const { sql, ensureSchema, isConfigured } = require('../lib/db');
-const { computeTotals, CheckoutError } = require('../lib/checkout');
-const { getWompiEnvironment, getWompiKeys } = require('../lib/wompi-env');
+const { sql, ensureSchema, isConfigured } = require('./_lib/db');
+const { computeTotals, CheckoutError } = require('./_lib/checkout');
+const { getWompiEnvironment, getWompiKeys } = require('./_lib/wompi-env');
+const { clientIp, isRateLimited, recordHit } = require('./_lib/rate-limit');
+
+// Límites por IP: pedidos creados (evita llenar el backoffice de pedidos
+// basura) e intentos con cupón inválido (evita adivinar códigos por fuerza bruta).
+const ORDER_LIMIT = { max: 10, windowMinutes: 60 };
+const COUPON_FAIL_LIMIT = { max: 15, windowMinutes: 60 };
 
 function formatCOP(n) {
   return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
@@ -30,7 +36,13 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  let body;
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  } catch {
+    res.status(400).json({ error: 'invalid_json' });
+    return;
+  }
   const channel = body.channel === 'whatsapp' ? 'whatsapp' : 'wompi';
 
   const customerName = String(body.customer_name || '').trim().slice(0, 200);
@@ -43,12 +55,22 @@ module.exports = async (req, res) => {
 
   try {
     await ensureSchema();
+    const ip = clientIp(req);
+
+    if (body.coupon_code && await isRateLimited('coupon_fail', ip, COUPON_FAIL_LIMIT.max, COUPON_FAIL_LIMIT.windowMinutes)) {
+      res.status(429).json({
+        error: 'too_many_attempts',
+        message: 'Demasiados intentos con cupones inválidos. Espera un rato e inténtalo de nuevo.',
+      });
+      return;
+    }
 
     let totals;
     try {
       totals = await computeTotals(body);
     } catch (err) {
       if (err instanceof CheckoutError) {
+        if (err.code === 'invalid_coupon') await recordHit('coupon_fail', ip);
         res.status(400).json({ error: err.code, message: err.message, ...err.extra });
         return;
       }
@@ -70,6 +92,14 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (await isRateLimited('order', ip, ORDER_LIMIT.max, ORDER_LIMIT.windowMinutes)) {
+      res.status(429).json({
+        error: 'too_many_orders',
+        message: 'Has creado demasiados pedidos en poco tiempo. Espera un rato o escríbenos por WhatsApp.',
+      });
+      return;
+    }
+
     let publicKey = null;
     let integritySecret = null;
     let environment = null;
@@ -81,6 +111,20 @@ module.exports = async (req, res) => {
           error: 'wompi_not_configured',
           message: `Faltan las llaves de Wompi para el entorno "${environment}" en las variables de entorno.`,
         });
+        return;
+      }
+    }
+
+    // Reserva el uso del cupón de forma atómica: si dos pedidos llegan a la vez
+    // con el último uso disponible, solo uno lo consigue.
+    if (totals.coupon) {
+      const reserved = await sql`
+        UPDATE coupons SET times_used = times_used + 1
+        WHERE id = ${totals.coupon.id} AND (usage_limit IS NULL OR times_used < usage_limit)
+        RETURNING id
+      `;
+      if (!reserved.length) {
+        res.status(400).json({ error: 'invalid_coupon', message: 'Ese cupón ya alcanzó su límite de usos.' });
         return;
       }
     }
@@ -104,16 +148,13 @@ module.exports = async (req, res) => {
       RETURNING id
     `;
     const orderId = orderRows[0].id;
+    await recordHit('order', ip);
 
     for (const line of totals.lines) {
       await sql`
         INSERT INTO order_items (order_id, product_id, product_name, unit_price_cop, quantity, line_total_cop)
         VALUES (${orderId}, ${line.product_id}, ${line.product_name}, ${line.unit_price_cop}, ${line.quantity}, ${line.line_total_cop})
       `;
-    }
-
-    if (totals.coupon) {
-      await sql`UPDATE coupons SET times_used = times_used + 1 WHERE id = ${totals.coupon.id}`;
     }
 
     if (channel === 'wompi') {

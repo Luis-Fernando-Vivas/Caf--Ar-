@@ -1,7 +1,7 @@
 // Público: tarifas de envío activas, para el selector del carrito.
 
-const { sql, ensureSchema, isConfigured } = require('../lib/db');
-const { getFreeShippingRule } = require('../lib/shipping-rule');
+const { sql, ensureSchema, isConfigured } = require('./_lib/db');
+const { getFreeShippingRule } = require('./_lib/shipping-rule');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {

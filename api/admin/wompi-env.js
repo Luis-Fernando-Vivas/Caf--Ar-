@@ -1,11 +1,11 @@
 // Backoffice: consultar (GET) y cambiar (POST) el entorno activo de Wompi
 // (sandbox "test" vs. producción "prod"). Protegido por la cookie de sesión
-// de admin -- ver lib/auth.js. Las llaves mismas nunca viajan al navegador,
+// de admin -- ver api/_lib/auth.js. Las llaves mismas nunca viajan al navegador,
 // solo qué entorno está activo y cuáles tienen llaves cargadas.
 
-const { isAuthenticated } = require('../../lib/auth');
-const { isConfigured } = require('../../lib/db');
-const { getWompiEnvironment, setWompiEnvironment, getConfiguredEnvironments } = require('../../lib/wompi-env');
+const { isAuthenticated } = require('../_lib/auth');
+const { isConfigured } = require('../_lib/db');
+const { getWompiEnvironment, setWompiEnvironment, getConfiguredEnvironments } = require('../_lib/wompi-env');
 
 module.exports = async (req, res) => {
   if (!isAuthenticated(req)) {

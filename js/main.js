@@ -13,14 +13,27 @@ function formatCOP(n){
   return n.toLocaleString('es-CO', { maximumFractionDigits:0 });
 }
 
+/* Fotos subidas a Cloudinary: pide una versión liviana (formato y calidad
+   automáticos, ancho acotado) en vez del original de ~1-2 MB. Cualquier otra
+   URL se devuelve tal cual. */
+function cldImage(url, transform) {
+  if (typeof url !== 'string') return url;
+  return url.replace(
+    /(res\.cloudinary\.com\/[^/]+\/image\/upload\/)(v\d+\/)/,
+    '$1' + (transform || 'f_auto,q_auto,w_900') + '/$2'
+  );
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------------- page loader ---------------- */
+  // Se oculta al terminar de cargar, pero nunca más de ~1.2 s: esperar a
+  // todas las imágenes retrasaba el primer pintado (LCP) que mide Google.
   const loader = document.querySelector('.page-loader');
   if (loader) {
-    window.addEventListener('load', () => {
-      setTimeout(() => loader.classList.add('is-done'), 250);
-    });
+    const hideLoader = () => loader.classList.add('is-done');
+    window.addEventListener('load', () => setTimeout(hideLoader, 250));
+    setTimeout(hideLoader, 1200);
   }
 
   /* ---------------- header scroll state ---------------- */

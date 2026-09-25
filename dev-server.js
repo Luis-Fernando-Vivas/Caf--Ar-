@@ -52,7 +52,8 @@ function enhanceResponse(res) {
 async function handleApi(req, res, pathname) {
   const relative = pathname.replace(/^\/api\//, '');
   const filePath = path.join(ROOT, 'api', relative + '.js');
-  if (!filePath.startsWith(path.join(ROOT, 'api'))) {
+  // Igual que Vercel: carpetas/archivos con "_" (ej. api/_lib) no son endpoints.
+  if (!filePath.startsWith(path.join(ROOT, 'api')) || relative.split('/').some((seg) => seg.startsWith('_'))) {
     res.status(400).json({ error: 'bad_path' });
     return;
   }

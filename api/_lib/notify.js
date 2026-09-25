@@ -36,6 +36,17 @@ const BRAND = {
   textSoft: '#5a4c3c',
 };
 
+// Los datos del pedido (nombre, dirección, etc.) los escribe el cliente:
+// siempre se escapan antes de meterlos en el HTML del correo.
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function formatCOP(n) {
   return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 }
@@ -67,8 +78,8 @@ function itemsRowsHtml(items) {
       (it, i) => `
         <tr>
           <td style="padding:14px 0;border-bottom:1px solid ${BRAND.cream2};font-family:'Inter',Arial,sans-serif;font-size:14px;color:${BRAND.text};${i === 0 ? 'padding-top:0;' : ''}">
-            <strong>${it.product_name}</strong><br/>
-            <span style="color:${BRAND.textSoft};font-size:13px;">Cantidad: ${it.quantity}</span>
+            <strong>${esc(it.product_name)}</strong><br/>
+            <span style="color:${BRAND.textSoft};font-size:13px;">Cantidad: ${esc(it.quantity)}</span>
           </td>
           <td style="padding:14px 0;border-bottom:1px solid ${BRAND.cream2};font-family:'Inter',Arial,sans-serif;font-size:14px;color:${BRAND.text};text-align:right;white-space:nowrap;${i === 0 ? 'padding-top:0;' : ''}">
             $${formatCOP(it.line_total_cop)}
@@ -85,12 +96,12 @@ function summaryRowsHtml(order) {
   ];
   if (order.shipping_name) {
     rows.push(
-      `<tr><td style="${rowStyle}">Envío (${order.shipping_name})</td><td style="${rowStyle}text-align:right;">$${formatCOP(order.shipping_cop)}</td></tr>`
+      `<tr><td style="${rowStyle}">Envío (${esc(order.shipping_name)})</td><td style="${rowStyle}text-align:right;">$${formatCOP(order.shipping_cop)}</td></tr>`
     );
   }
   if (order.discount_cop > 0) {
     rows.push(
-      `<tr><td style="${rowStyle}">Descuento${order.coupon_code ? ` (${order.coupon_code})` : ''}</td><td style="${rowStyle}text-align:right;color:${BRAND.red};">-$${formatCOP(order.discount_cop)}</td></tr>`
+      `<tr><td style="${rowStyle}">Descuento${order.coupon_code ? ` (${esc(order.coupon_code)})` : ''}</td><td style="${rowStyle}text-align:right;color:${BRAND.red};">-$${formatCOP(order.discount_cop)}</td></tr>`
     );
   }
   rows.push(`
@@ -197,11 +208,11 @@ async function sendAdminOrderNotification(order, items) {
         <td style="padding:18px 20px;">
           <p style="margin:0 0 8px;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND.textSoft};">Datos del cliente</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-            <tr><td style="${contactRowStyle}"><strong>Nombre:</strong> ${order.customer_name || '(sin nombre)'}</td></tr>
-            <tr><td style="${contactRowStyle}"><strong>Email:</strong> ${order.customer_email || '(sin email)'}</td></tr>
-            <tr><td style="${contactRowStyle}"><strong>Teléfono:</strong> ${order.customer_phone || '(sin teléfono)'}</td></tr>
-            <tr><td style="${contactRowStyle}"><strong>Dirección:</strong> ${order.customer_address || '(sin dirección)'}</td></tr>
-            <tr><td style="${contactRowStyle}"><strong>Referencia:</strong> ${order.reference}</td></tr>
+            <tr><td style="${contactRowStyle}"><strong>Nombre:</strong> ${esc(order.customer_name || '(sin nombre)')}</td></tr>
+            <tr><td style="${contactRowStyle}"><strong>Email:</strong> ${esc(order.customer_email || '(sin email)')}</td></tr>
+            <tr><td style="${contactRowStyle}"><strong>Teléfono:</strong> ${esc(order.customer_phone || '(sin teléfono)')}</td></tr>
+            <tr><td style="${contactRowStyle}"><strong>Dirección:</strong> ${esc(order.customer_address || '(sin dirección)')}</td></tr>
+            <tr><td style="${contactRowStyle}"><strong>Referencia:</strong> ${esc(order.reference)}</td></tr>
           </table>
         </td>
       </tr>
@@ -242,7 +253,7 @@ async function sendCustomerOrderConfirmation(order, items) {
     preheader: `Confirmamos tu pedido ${order.reference}`,
     badge: 'Pedido confirmado',
     heading: '¡Gracias por tu compra!',
-    intro: `Ya recibimos tu pago y estamos preparando tu pedido con mucho cariño. Este es el resumen de <strong>${order.reference}</strong>:`,
+    intro: `Ya recibimos tu pago y estamos preparando tu pedido con mucho cariño. Este es el resumen de <strong>${esc(order.reference)}</strong>:`,
     bodyHtml,
     footerNote: 'Te avisaremos por aquí en cuanto tu pedido salga hacia el envío. Si tienes alguna pregunta, solo responde a este correo.',
   });

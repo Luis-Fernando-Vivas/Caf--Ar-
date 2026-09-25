@@ -26,7 +26,7 @@ function renderProductCard(product) {
   const media = document.createElement('div');
   media.className = 'product-card-media';
   const img = document.createElement('img');
-  img.src = cover;
+  img.src = cldImage(cover, 'f_auto,q_auto,w_700');
   img.alt = product.name;
   media.appendChild(img);
 
@@ -141,6 +141,13 @@ async function loadCatalog() {
       return;
     }
     products.forEach((p) => grid.appendChild(renderProductCard(p)));
+    if (window.Analytics) {
+      Analytics.event('view_item_list', {
+        item_list_id: 'tienda',
+        item_list_name: 'Tienda',
+        items: products.map((p, i) => ({ ...Analytics.productItem(p), index: i })),
+      });
+    }
   } catch {
     empty.textContent = 'No se pudo cargar la tienda. Intenta de nuevo más tarde.';
     empty.style.display = 'block';

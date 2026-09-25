@@ -20,6 +20,21 @@ const sql = isConfigured ? neon(connectionString) : null;
 
 let schemaReady = null;
 
+// Súbelo cada vez que cambies las migraciones de abajo. Mientras coincida con
+// el guardado en `settings`, ensureSchema se resuelve con UNA sola consulta en
+// vez de ~30 viajes secuenciales a Neon (lo que hacía lenta la primera carga
+// de la tienda en cada arranque en frío de la función).
+const SCHEMA_VERSION = '3';
+
+async function schemaIsCurrent() {
+  try {
+    const rows = await sql`SELECT value FROM settings WHERE key = 'schema_version' LIMIT 1`;
+    return rows.length > 0 && rows[0].value === SCHEMA_VERSION;
+  } catch {
+    return false; // la tabla settings aún no existe -> hay que migrar
+  }
+}
+
 function ensureSchema() {
   if (!isConfigured) {
     throw new Error(
@@ -29,6 +44,8 @@ function ensureSchema() {
   if (!schemaReady) {
     // Secuencial (no Promise.all): el ALTER TABLE depende de que orders ya exista.
     schemaReady = (async () => {
+      if (await schemaIsCurrent()) return;
+
       await sql`
         CREATE TABLE IF NOT EXISTS orders (
           id SERIAL PRIMARY KEY,
@@ -130,6 +147,18 @@ function ensureSchema() {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT;`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ;`;
+      // Límite de peticiones por IP (login, pedidos, reseñas, cupones) -- ver
+      // api/_lib/rate-limit.js. Reemplaza a la tabla login_attempts de la v2.
+      await sql`
+        CREATE TABLE IF NOT EXISTS rate_limits (
+          id SERIAL PRIMARY KEY,
+          bucket TEXT NOT NULL,
+          ip TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS rate_limits_lookup ON rate_limits (bucket, ip, created_at);`;
+      await sql`DROP TABLE IF EXISTS login_attempts;`;
 
       // Semillas: si el catálogo está vacío, migra el único producto que existía
       // hardcodeado en el sitio, así el catálogo nunca queda vacío durante el rollout.
@@ -165,6 +194,10 @@ function ensureSchema() {
           ('Daniela Castro', 5, 'compre para regalar y termine pidiendo otra bolsa pa mi mismo se siente que es autentico cafe huilense', '2026-08-14T20:30:00-05:00'::timestamptz)
         ) AS r(author_name, rating, comment, created_at)
         WHERE p.slug = 'cafe-aru-honey-500g' AND NOT EXISTS (SELECT 1 FROM reviews);
+      `;
+      await sql`
+        INSERT INTO settings (key, value) VALUES ('schema_version', ${SCHEMA_VERSION})
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now();
       `;
     })().catch((err) => {
       schemaReady = null; // permite reintentar en la próxima invocación si falló

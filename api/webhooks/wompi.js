@@ -14,9 +14,9 @@
 // igual al que envía Wompi -- las pasarelas de pago a veces ajustan estos detalles.
 
 const crypto = require('crypto');
-const { sql, ensureSchema } = require('../../lib/db');
-const { getWompiEnvironment, getWompiKeys } = require('../../lib/wompi-env');
-const { sendAdminOrderNotification, sendCustomerOrderConfirmation } = require('../../lib/notify');
+const { sql, ensureSchema } = require('../_lib/db');
+const { getWompiEnvironment, getWompiKeys } = require('../_lib/wompi-env');
+const { sendAdminOrderNotification, sendCustomerOrderConfirmation } = require('../_lib/notify');
 
 function resolvePath(obj, path) {
   return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
@@ -55,7 +55,11 @@ module.exports = async (req, res) => {
       eventsSecret;
     const expected = crypto.createHash('sha256').update(concatenated).digest('hex');
 
-    if (!checksum || expected !== checksum) {
+    const validSignature =
+      typeof checksum === 'string' &&
+      checksum.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(checksum.toLowerCase()), Buffer.from(expected));
+    if (!validSignature) {
       console.warn('Firma de webhook de Wompi inválida.');
       res.status(401).json({ error: 'invalid_signature' });
       return;
@@ -65,7 +69,7 @@ module.exports = async (req, res) => {
     if (tx && tx.reference) {
       await ensureSchema();
 
-      const newStatus = String(tx.status || 'pending').toLowerCase();
+      let newStatus = String(tx.status || 'pending').toLowerCase();
       const customerEmail = tx.customer_email || null;
       const customerName = (tx.customer_data && tx.customer_data.full_name) || null;
       const customerPhone = (tx.customer_data && tx.customer_data.phone_number) || null;
@@ -87,8 +91,16 @@ module.exports = async (req, res) => {
             .join(', ')
         : null;
 
-      const existingRows = await sql`SELECT id, status, notified_at FROM orders WHERE reference = ${tx.reference}`;
+      const existingRows = await sql`SELECT id, status, notified_at, amount_cop FROM orders WHERE reference = ${tx.reference}`;
       const existing = existingRows[0];
+
+      // Defensa extra: un pago "aprobado" solo cuenta si el monto cobrado es
+      // exactamente el del pedido. Si no, queda marcado para revisión manual
+      // y no se dispara ningún correo.
+      if (existing && newStatus === 'approved' && Number(tx.amount_in_cents) !== existing.amount_cop * 100) {
+        console.error(`Monto de Wompi no coincide para ${tx.reference}: ${tx.amount_in_cents} vs ${existing.amount_cop * 100}`);
+        newStatus = 'amount_mismatch';
+      }
 
       // El nombre/dirección/teléfono que el cliente escribió en nuestro propio
       // formulario de carrito.html es más confiable que lo que reporte Wompi

@@ -1,0 +1,8 @@
+# Archivos que no deben publicarse en el sitio (Vercel sirve como estático
+# todo lo que no esté en /api). Solo son para desarrollo local.
+.env
+.env.*
+dev-server.js
+cloudinary_urls.json
+deno.lock
+netlify

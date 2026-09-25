@@ -124,6 +124,8 @@ function initLoginPage(){
         errorEl.textContent = 'El backoffice todavía no está configurado (falta ADMIN_PASSWORD en Vercel).';
       } else if (res.status === 401) {
         errorEl.textContent = 'Contraseña incorrecta.';
+      } else if (res.status === 429) {
+        errorEl.textContent = 'Demasiados intentos fallidos. Espera 15 minutos e inténtalo de nuevo.';
       } else if (res.ok) {
         window.location.href = '/admin';
         return;

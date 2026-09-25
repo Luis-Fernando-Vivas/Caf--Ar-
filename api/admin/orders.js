@@ -1,8 +1,8 @@
 // Backoffice: listar pedidos (GET) y actualizar su estado manualmente (PATCH).
-// Protegido por la cookie de sesión de admin -- ver lib/auth.js.
+// Protegido por la cookie de sesión de admin -- ver api/_lib/auth.js.
 
-const { isAuthenticated } = require('../../lib/auth');
-const { sql, ensureSchema, isConfigured } = require('../../lib/db');
+const { isAuthenticated } = require('../_lib/auth');
+const { sql, ensureSchema, isConfigured } = require('../_lib/db');
 
 const ALLOWED_STATUSES = [
   'pending',

@@ -9,8 +9,12 @@
 // PATCH { id, status } (requiere sesión admin) -> aprobar/rechazar una reseña.
 // DELETE ?id=           (requiere sesión admin) -> borrar una reseña.
 
-const { isAuthenticated } = require('../lib/auth');
-const { sql, ensureSchema, isConfigured } = require('../lib/db');
+const { isAuthenticated } = require('./_lib/auth');
+const { sql, ensureSchema, isConfigured } = require('./_lib/db');
+const { clientIp, isRateLimited, recordHit } = require('./_lib/rate-limit');
+
+// Máx. reseñas enviadas por IP, para que no inunden la cola de moderación.
+const REVIEW_LIMIT = { max: 3, windowMinutes: 60 };
 
 const ALLOWED_STATUSES = ['pending', 'approved', 'rejected'];
 
@@ -87,10 +91,20 @@ module.exports = async (req, res) => {
         return;
       }
 
+      const ip = clientIp(req);
+      if (await isRateLimited('review', ip, REVIEW_LIMIT.max, REVIEW_LIMIT.windowMinutes)) {
+        res.status(429).json({
+          error: 'too_many_reviews',
+          message: 'Ya recibimos varias reseñas tuyas hace poco. Inténtalo de nuevo más tarde.',
+        });
+        return;
+      }
+
       await sql`
         INSERT INTO reviews (product_id, author_name, rating, comment, status)
         VALUES (${productId}, ${authorName}, ${rating}, ${comment}, 'pending')
       `;
+      await recordHit('review', ip);
       res.status(201).json({ ok: true, message: 'Gracias, tu reseña quedará publicada luego de una breve revisión.' });
       return;
     }

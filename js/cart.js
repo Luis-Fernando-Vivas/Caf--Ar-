@@ -54,6 +54,9 @@ const Cart = {
       });
     }
     cartWrite(items);
+    if (window.Analytics) {
+      Analytics.ecommerce('add_to_cart', [Analytics.productItem(product, quantity, variant)], product.price_cop * quantity);
+    }
   },
 
   setQty(productId, quantity, variant = null) {
@@ -65,6 +68,10 @@ const Cart = {
   },
 
   remove(productId, variant = null) {
+    const removed = cartRead().find((it) => it.product_id === productId && (it.variant || null) === (variant || null));
+    if (removed && window.Analytics) {
+      Analytics.ecommerce('remove_from_cart', Analytics.cartItems([removed]), removed.price_cop * removed.quantity);
+    }
     cartWrite(cartRead().filter((it) => !(it.product_id === productId && (it.variant || null) === (variant || null))));
   },
 

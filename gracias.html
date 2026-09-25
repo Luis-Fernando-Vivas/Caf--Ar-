@@ -6,6 +6,9 @@
 <title>Estado de tu pedido — Café Arú</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="img/logo-cafe-aru.png">
+<!-- Google tag (gtag.js) -- configuración y eventos en js/analytics.js -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-65DS79JYBB"></script>
+<script src="js/analytics.js"></script>
 <link rel="stylesheet" href="css/style.css">
 <style>
   .status-wrap{
@@ -133,6 +136,9 @@
             '<path d="M20 6L9 17l-5-5"/>',
             '¡Pago aprobado!',
             'Gracias por tu compra. Te escribiremos por WhatsApp para coordinar el envío de tu Café Arú.');
+          if (window.Analytics && tx.reference) {
+            Analytics.trackPurchase(tx.reference, Math.round((tx.amount_in_cents || 0) / 100));
+          }
           break;
         case 'PENDING':
           setState('pending',

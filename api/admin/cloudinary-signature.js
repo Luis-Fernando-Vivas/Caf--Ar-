@@ -23,7 +23,7 @@
 // (Dashboard de Cloudinary -> Settings -> API Keys)
 
 const crypto = require('crypto');
-const { isAuthenticated } = require('../../lib/auth');
+const { isAuthenticated } = require('../_lib/auth');
 
 module.exports = async (req, res) => {
   if (!isAuthenticated(req)) {

@@ -1,28 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://www.coffeearu.com/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-09-25</lastmod>
+    <image:image><image:loc>https://www.coffeearu.com/img/fundadores-mirador.jpg</image:loc></image:image>
+    <image:image><image:loc>https://www.coffeearu.com/img/finca-paisaje.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://www.coffeearu.com/tienda</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <lastmod>2026-09-25</lastmod>
   </url>
   <url>
     <loc>https://www.coffeearu.com/producto?slug=cafe-aru-honey-500g</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <lastmod>2026-09-25</lastmod>
+    <image:image><image:loc>https://res.cloudinary.com/pqtndfb3/image/upload/f_auto,q_auto,w_1200/v1788219503/cafe-aru/products/cafe-aru-honey-500g-1.webp</image:loc></image:image>
+    <image:image><image:loc>https://res.cloudinary.com/pqtndfb3/image/upload/f_auto,q_auto,w_1200/v1788219504/cafe-aru/products/cafe-aru-honey-500g-2-granos.webp</image:loc></image:image>
+    <image:image><image:loc>https://res.cloudinary.com/pqtndfb3/image/upload/f_auto,q_auto,w_1200/v1788219505/cafe-aru/products/cafe-aru-honey-500g-3-taza.webp</image:loc></image:image>
   </url>
   <url>
     <loc>https://www.coffeearu.com/nosotros</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <lastmod>2026-09-25</lastmod>
+    <image:image><image:loc>https://www.coffeearu.com/img/familia-aru.jpg</image:loc></image:image>
+    <image:image><image:loc>https://www.coffeearu.com/img/mujer-flores-cafe.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://www.coffeearu.com/galeria</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <lastmod>2026-09-25</lastmod>
+    <image:image><image:loc>https://www.coffeearu.com/img/proceso-secado.jpg</image:loc></image:image>
+    <image:image><image:loc>https://www.coffeearu.com/img/cerezas-cosecha.jpg</image:loc></image:image>
+    <image:image><image:loc>https://www.coffeearu.com/img/mujer-recolectora.png</image:loc></image:image>
   </url>
 </urlset>

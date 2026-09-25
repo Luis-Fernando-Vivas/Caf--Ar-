@@ -39,7 +39,7 @@ function renderLines() {
     line.className = 'cart-line';
 
     const img = document.createElement('img');
-    img.src = it.image || 'img/product/cafe-aru.webp';
+    img.src = it.image ? cldImage(it.image, 'f_auto,q_auto,w_200') : 'img/product/cafe-aru.webp';
     img.alt = it.name;
     line.appendChild(img);
 
@@ -254,6 +254,14 @@ async function checkout(channel) {
     return;
   }
 
+  const cartValue = lastTotals ? lastTotals.amount_cop : Cart.getSubtotal();
+  if (window.Analytics) {
+    Analytics.ecommerce('begin_checkout', Analytics.cartItems(items), cartValue, {
+      coupon: appliedCoupon || undefined,
+      payment_type: channel,
+    });
+  }
+
   const wompiBtn = document.getElementById('payWompiBtn');
   const waBtn = document.getElementById('payWhatsappBtn');
   wompiBtn.disabled = true;
@@ -290,10 +298,23 @@ async function checkout(channel) {
         'redirect-url': redirectUrl,
         'collect-shipping-address': 'true',
       });
+      if (window.Analytics) {
+        Analytics.savePendingPurchase({
+          reference: data.reference,
+          items: Analytics.cartItems(items),
+          shipping: lastTotals ? lastTotals.shipping_cop : undefined,
+          coupon: appliedCoupon || undefined,
+        });
+      }
       window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
       return;
     }
 
+    // Por WhatsApp el pago se coordina después, así que no es una venta
+    // confirmada: se registra como lead (y se marca como evento clave en GA4).
+    if (window.Analytics) {
+      Analytics.ecommerce('generate_lead', Analytics.cartItems(items), cartValue, { lead_source: 'whatsapp_checkout' });
+    }
     Cart.clear();
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(data.whatsappMessage)}`;
     window.open(url, '_blank', 'noopener');
@@ -307,6 +328,9 @@ async function checkout(channel) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   renderLines();
+  if (window.Analytics && Cart.getCount() > 0) {
+    Analytics.ecommerce('view_cart', Analytics.cartItems(Cart.getItems()), Cart.getSubtotal());
+  }
   await loadShippingRates();
   await refreshTotals();
 

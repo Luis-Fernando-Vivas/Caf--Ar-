@@ -3,22 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tienda — Café Arú</title>
-<meta name="description" content="Descubre los cafés de Café Arú: producción familiar y artesanal desde Palermo, Huila. Compra directo con envío a toda Colombia.">
+<title>Comprar café Honey de Huila en línea | Café Arú</title>
+<meta name="description" content="Compra café tipo Honey de Palermo, Huila, directo de la finca familiar. Grano entero o molido, tueste artesanal y envío a toda Colombia.">
 <link rel="canonical" href="https://www.coffeearu.com/tienda">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Café Arú">
 <meta property="og:locale" content="es_CO">
-<meta property="og:title" content="Tienda — Café Arú">
-<meta property="og:description" content="Descubre los cafés de Café Arú: producción familiar y artesanal desde Palermo, Huila. Compra directo con envío a toda Colombia.">
+<meta property="og:title" content="Comprar café Honey de Huila en línea | Café Arú">
+<meta property="og:description" content="Compra café tipo Honey de Palermo, Huila, directo de la finca familiar. Grano entero o molido, tueste artesanal y envío a toda Colombia.">
 <meta property="og:url" content="https://www.coffeearu.com/tienda">
-<meta property="og:image" content="https://www.coffeearu.com/img/product/cafe-aru.webp">
+<meta property="og:image" content="https://res.cloudinary.com/pqtndfb3/image/upload/c_fill,w_1200,h_630,f_jpg,q_auto/v1788219503/cafe-aru/products/cafe-aru-honey-500g-1.webp">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bolsa de Café Arú Honey 500g">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tienda — Café Arú">
-<meta name="twitter:description" content="Descubre los cafés de Café Arú: producción familiar y artesanal desde Palermo, Huila. Compra directo con envío a toda Colombia.">
-<meta name="twitter:image" content="https://www.coffeearu.com/img/product/cafe-aru.webp">
+<meta name="twitter:title" content="Comprar café Honey de Huila en línea | Café Arú">
+<meta name="twitter:description" content="Compra café tipo Honey de Palermo, Huila, directo de la finca familiar. Grano entero o molido, tueste artesanal y envío a toda Colombia.">
+<meta name="twitter:image" content="https://res.cloudinary.com/pqtndfb3/image/upload/c_fill,w_1200,h_630,f_jpg,q_auto/v1788219503/cafe-aru/products/cafe-aru-honey-500g-1.webp">
 <link rel="icon" href="img/logo-cafe-aru.png">
+<!-- Google tag (gtag.js) -- configuración y eventos en js/analytics.js -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-65DS79JYBB"></script>
+<script src="js/analytics.js"></script>
+<link rel="apple-touch-icon" href="/img/logo-cafe-aru.png">
+<meta name="theme-color" content="#17110c">
+<link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Inicio","item":"https://www.coffeearu.com/"},{"@type":"ListItem","position":2,"name":"Tienda","item":"https://www.coffeearu.com/tienda"}]}</script>
 <link rel="stylesheet" href="css/style.css">
+<link rel="preload" href="/api/products" as="fetch" crossorigin="anonymous">
 </head>
 <body>
 
@@ -57,7 +68,7 @@
 <section class="page-hero">
   <div class="container">
     <div class="breadcrumb"><a href="/">Inicio</a> / Tienda</div>
-    <h1 data-reveal>Nuestra tienda</h1>
+    <h1 data-reveal>Tienda de café Honey</h1>
     <p class="lead" data-reveal style="transition-delay:.1s">Café tipo Honey, producción familiar y artesanal desde Palermo, Huila.</p>
   </div>
 </section>
@@ -65,6 +76,7 @@
 <section class="section" style="padding-top:1rem;">
   <div class="container">
     <div id="productGrid" class="product-grid" data-reveal-group></div>
+    <noscript><p class="lead" style="text-align:center;"><a href="/producto?slug=cafe-aru-honey-500g">Café Arú Honey 500g</a></p></noscript>
     <div id="productGridEmpty" class="cart-empty" style="display:none;">Todavía no hay productos disponibles.</div>
   </div>
 </section>
@@ -73,7 +85,7 @@
   <div class="container">
     <div class="footer-top">
       <div class="footer-brand">
-        <img src="img/logo-cafe-aru-light.png" alt="Café Arú">
+        <img loading="lazy" decoding="async" src="img/logo-cafe-aru-light.png" alt="Café Arú">
         <p>Café tipo Honey, 100% colombiano. Producción familiar y artesanal desde las montañas de Palermo, Huila.</p>
         <div class="footer-social">
           <a href="https://www.instagram.com/cafe.aru/" target="_blank" rel="noopener" aria-label="Instagram" data-cursor-hover>

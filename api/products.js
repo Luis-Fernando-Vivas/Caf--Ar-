@@ -2,7 +2,7 @@
 // GET /api/products            -> { products: [...] }
 // GET /api/products?slug=xxx   -> { product: {...} }  (404 si no existe o no está activo)
 
-const { sql, ensureSchema, isConfigured } = require('../lib/db');
+const { sql, ensureSchema, isConfigured } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -19,6 +19,11 @@ module.exports = async (req, res) => {
     await ensureSchema();
 
     const slug = new URL(req.url, 'http://localhost').searchParams.get('slug');
+
+    // Caché en el CDN de Vercel: la mayoría de visitas se sirven sin tocar la
+    // base de datos. Los cambios del backoffice se ven en máx. ~60 s (el stock
+    // real se vuelve a validar en el checkout).
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
 
     if (slug) {
       const rows = await sql`
