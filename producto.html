@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title id="pageTitle">Producto — Café Arú</title>
 <meta name="description" id="pageDescription" content="Café Arú: café colombiano de producción familiar y artesanal en Palermo, Huila.">
 <link rel="canonical" id="pageCanonical" href="https://www.coffeearu.com/producto?slug=cafe-aru-honey-500g">
@@ -114,7 +114,17 @@
           </div>
           <div class="qty-row total-row">
             <span>Total</span>
-            <strong data-total>$0 COP</strong>
+            <strong data-total></strong>
+          </div>
+          <!-- Mismo componente que la barra de envío gratis del carrito. -->
+          <div class="free-shipping-bar" id="freeShippingBar" hidden>
+            <p class="free-shipping-bar-text" id="freeShippingBarText" aria-live="polite"></p>
+            <div class="free-shipping-bar-track">
+              <div class="free-shipping-bar-fill" id="freeShippingBarFill"></div>
+              <div class="free-shipping-bar-cart" id="freeShippingBarCart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+              </div>
+            </div>
           </div>
           <button class="btn btn-primary" id="addToCartBtn" data-magnetic>
             Añadir al carrito
@@ -123,6 +133,17 @@
           <button class="btn btn-ghost" id="buyNowBtn" data-magnetic style="margin-top:.6rem;">
             Comprar ahora
           </button>
+          <div class="pay-methods">
+            <span class="pay-methods-label">Paga con:</span>
+            <ul>
+              <li>Nequi</li>
+              <li>PSE</li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+                Tarjeta débito/crédito
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div class="trust-row">
@@ -132,11 +153,15 @@
           </div>
           <div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8Z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg>
-            Tueste siempre fresco
+            Tostado la semana de tu pedido
           </div>
           <div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h7.5m-10.5 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m18.75 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H15M17.25 18.75H9.75M17.25 7.573v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0A1.106 1.106 0 0 0 5.25 6.615v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
-            Envío a toda Colombia
+            Envío a toda Colombia · Llega en 3–5 días hábiles
+          </div>
+          <div id="freeShippingTrust" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+            <span id="freeShippingTrustText"></span>
           </div>
         </div>
 
@@ -355,13 +380,13 @@
   </div>
 </footer>
 
-<div class="sticky-buy">
+<div class="sticky-buy" hidden>
   <div class="container">
     <div class="sticky-buy-info">
       <img loading="lazy" decoding="async" src="img/product/cafe-aru.webp" alt="Café Arú" id="stickyImg">
       <div>
         <strong id="stickyName">Café Arú</strong>
-        <span id="stickyPrice">$0</span>
+        <span id="stickyPrice"></span>
       </div>
     </div>
     <button class="btn btn-primary btn-sm" id="stickyAddBtn" data-magnetic>Añadir</button>

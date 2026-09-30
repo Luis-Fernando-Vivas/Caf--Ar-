@@ -687,12 +687,70 @@ body:has(.sticky-buy.is-visible) .cart-toast{ bottom:5.6rem; }
 }
 
 /* ===================================================================
+   Botón flotante "¿Dudas? Escríbenos" (main.js lo inyecta)
+=================================================================== */
+.help-fab{
+  position:fixed; right:1.2rem; bottom:calc(1.2rem + env(safe-area-inset-bottom)); z-index:85;
+  display:flex; align-items:center; gap:.7rem;
+  padding:.45rem 1.15rem .45rem .45rem; border-radius:999px;
+  background:var(--c-black); color:var(--c-cream); text-decoration:none;
+  border:1px solid rgba(201,164,103,.35);
+  box-shadow:0 14px 34px rgba(23,17,12,.32), 0 2px 6px rgba(23,17,12,.2);
+  opacity:0; visibility:hidden; transform:translateY(24px) scale(.94);
+  transition:opacity .45s var(--ease), transform .45s var(--ease), visibility .45s,
+             bottom .35s var(--ease), background .3s, border-color .3s;
+}
+.help-fab.is-in{ opacity:1; visibility:visible; transform:none; }
+.help-fab.is-away{ opacity:0; visibility:hidden; transform:translateY(24px) scale(.94); pointer-events:none; }
+.help-fab:hover{ background:var(--c-black-soft); border-color:var(--c-kraft); transform:translateY(-3px); }
+.help-fab:focus-visible{ outline:2px solid var(--c-kraft); outline-offset:3px; }
+
+.help-fab-icon{
+  position:relative; flex:none; display:grid; place-items:center;
+  width:44px; height:44px; border-radius:50%;
+  background:var(--c-red); color:var(--c-white);
+  transition:background .3s, transform .45s var(--ease);
+}
+.help-fab-icon svg{ width:22px; height:22px; }
+/* Pulso suave para llamar la atención sin ser invasivo */
+.help-fab-icon::after{
+  content:''; position:absolute; inset:0; border-radius:50%;
+  border:2px solid var(--c-red); opacity:0;
+  animation:help-pulse 2.8s var(--ease-soft) infinite 2s;
+}
+.help-fab:hover .help-fab-icon{ background:var(--c-red-dark); transform:rotate(-10deg); }
+@keyframes help-pulse{
+  0%{ transform:scale(1); opacity:.7; }
+  70%,100%{ transform:scale(1.7); opacity:0; }
+}
+
+.help-fab-text{ display:flex; flex-direction:column; line-height:1.15; }
+.help-fab-text small{ font-size:.72rem; letter-spacing:.04em; color:var(--c-kraft-light); }
+.help-fab-text strong{ font-family:var(--font-display); font-weight:500; font-size:1.02rem; }
+
+/* No tapar la barra fija de compra ni el aviso de "añadido al carrito" */
+body:has(.sticky-buy.is-visible) .help-fab{ bottom:calc(5.6rem + env(safe-area-inset-bottom)); }
+body:has(.cart-toast.is-visible) .help-fab{ opacity:0; visibility:hidden; pointer-events:none; }
+
+@media (max-width:560px){
+  .help-fab{ right:1rem; bottom:calc(1rem + env(safe-area-inset-bottom)); padding:.35rem .95rem .35rem .35rem; gap:.55rem; }
+  .help-fab-icon{ width:38px; height:38px; }
+  .help-fab-icon svg{ width:19px; height:19px; }
+  .help-fab-text small{ font-size:.66rem; }
+  .help-fab-text strong{ font-size:.92rem; }
+}
+@media (prefers-reduced-motion: reduce){
+  .help-fab, .help-fab-icon{ transition-duration:.01ms; }
+  .help-fab-icon::after{ animation:none; }
+}
+
+/* ===================================================================
    Sticky buy bar (product page)
 =================================================================== */
 .sticky-buy{
   position:fixed; left:0; right:0; bottom:0; z-index:90;
   background:rgba(23,17,12,.92); backdrop-filter:blur(10px);
-  color:var(--c-cream); padding:.9rem 0;
+  color:var(--c-cream); padding:.9rem 0 calc(.9rem + env(safe-area-inset-bottom));
   transform:translateY(110%); transition:transform .5s var(--ease);
 }
 .sticky-buy.is-visible{ transform:translateY(0); }
@@ -801,14 +859,35 @@ body:has(.sticky-buy.is-visible) .cart-toast{ bottom:5.6rem; }
   font-size:.78rem; font-weight:600; color:var(--c-text-soft); line-height:1.3;
 }
 .trust-row svg{ width:1.7em; height:1.7em; color:var(--c-red); }
+.trust-row div[hidden]{ display:none; }
+/* con el beneficio de envío gratis activo son 4: cuadrícula de 2 × 2 */
+.trust-row:has(> div:nth-child(4):not([hidden])){ grid-template-columns:repeat(2, 1fr); row-gap:1.3rem; }
 @media (max-width:480px){
   .trust-row{ gap:.6rem; }
   .trust-row div{ font-size:.7rem; gap:.4rem; }
+  .trust-row:has(> div:nth-child(4):not([hidden])){ row-gap:1rem; }
 }
+
+/* barra de envío gratis dentro de la caja de compra (componente del carrito) */
+.buy-box .free-shipping-bar{ margin:.2rem 0 0; padding-top:0; }
+.buy-box .free-shipping-bar-text{ margin-bottom:.75rem; }
+
+/* ---------- medios de pago (debajo de los botones) ---------- */
+.pay-methods{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.45rem .5rem;
+  margin-top:1rem;
+}
+.pay-methods-label{ font-size:.78rem; font-weight:600; color:var(--c-text-soft); }
+.pay-methods ul{ display:contents; }
+.pay-methods li{
+  display:inline-flex; align-items:center; gap:.4em; height:22px; padding:0 .85em; border-radius:100px;
+  background:var(--c-kraft-light); font-size:.72rem; font-weight:600; color:var(--c-text); white-space:nowrap;
+}
+.pay-methods li svg{ width:1.25em; height:1.25em; flex:none; }
 
 /* ---------- sello Negocios Verdes (CAM) ---------- */
 .green-seal{
-  display:inline-flex; align-items:center; gap:.9rem; margin-top:1.6rem;
+  display:flex; width:fit-content; align-items:center; gap:.9rem; margin:1.6rem auto 0;
   padding:.6rem 1.3rem .6rem .6rem; background:var(--c-white); border-radius:100px;
   border:1px solid rgba(36,27,18,.1); box-shadow:0 14px 28px -16px rgba(23,17,12,.25);
   transition:transform .35s var(--ease), box-shadow .35s var(--ease);
@@ -924,6 +1003,53 @@ body:has(.sticky-buy.is-visible) .cart-toast{ bottom:5.6rem; }
 @media (max-width:900px){
   .product-main{ grid-template-columns:1fr; }
   .product-gallery{ position:static; }
+}
+
+/* Ficha de producto en móvil: espacios más compactos. La barra de compra fija
+   aparece cuando los botones principales salen de pantalla (producto.js). */
+@media (max-width:760px){
+  .product-hero-gap{ padding-top:4.9rem; padding-bottom:2.8rem; }
+  .product-main{ gap:1.4rem; }
+  .product-gallery[data-reveal], .product-info[data-reveal]{ transform:translateY(16px); }
+  .product-gallery[data-reveal].is-visible, .product-info[data-reveal].is-visible{ transform:none; }
+  .product-gallery-main{ border-radius:20px; }
+  .product-gallery-main:hover img{ transform:none; }
+  .product-thumbs{ gap:.5rem; margin-top:.6rem; }
+  .product-thumbs button{ border-radius:10px; }
+
+  .product-info .eyebrow{ margin-bottom:.4rem; font-size:.66rem; letter-spacing:.18em; }
+  .reviews-mini{ margin:.3rem 0 .35rem; }
+  .product-info h1{ font-size:1.85rem; line-height:1.1; }
+  .launch-badge{ margin-top:.55rem; font-size:.66rem; }
+  .price-row{ margin:.8rem 0 1rem; gap:.3rem .6rem; }
+  .price-row .price{ font-size:2rem; }
+  .price-row .price-compare{ font-size:1rem; }
+  .product-desc{ font-size:.93rem; line-height:1.65; margin-bottom:1.1rem; }
+  .flavor-tags{ gap:.4rem; margin-bottom:1.3rem; }
+  .flavor-tags span{ font-size:.74rem; padding:.45em .9em; }
+
+  .buy-box{ padding:1.1rem 1.1rem 1.2rem; border-radius:16px; }
+  .variant-row{ margin-bottom:.9rem; }
+  .qty-row{ margin-bottom:.7rem; }
+  .qty-stepper button{ width:38px; height:38px; }
+  .buy-box .btn{ margin-top:.8rem; }
+  .pay-methods{ margin-top:.85rem; }
+  .trust-row{ margin-top:1.3rem; padding-top:1.1rem; }
+  .green-seal{ margin-top:1.2rem; }
+
+  .tabs-nav{ gap:1.6rem; margin-bottom:1.3rem; }
+  .tabs-nav button{ padding:.8rem 0; }
+  .tab-panel ul{ grid-template-columns:1fr; gap:0; }
+  .prep-method{ padding:1.2rem 1.3rem; border-radius:16px; }
+
+  .sticky-buy{ padding:.65rem 0 calc(.65rem + env(safe-area-inset-bottom)); }
+  .sticky-buy-info{ min-width:0; gap:.6rem; }
+  .sticky-buy-info img{ height:36px; }
+  .sticky-buy-info > div{ min-width:0; }
+  .sticky-buy-info strong{ font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sticky-buy .btn{ flex:none; }
+  /* que la barra fija no tape el final del footer */
+  body:has(.sticky-buy) .site-footer{ padding-bottom:calc(2rem + 4.2rem + env(safe-area-inset-bottom)); }
 }
 
 /* tabs on product page */

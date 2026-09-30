@@ -157,7 +157,79 @@ function injectStructuredData(product, url) {
   document.head.appendChild(script);
 }
 
-function renderProduct(product) {
+// Regla de envío gratis: la misma que se configura en admin/shipping.html y
+// que aplica api/checkout.js, así lo que se promete aquí es lo que se cobra.
+// Si tarda o falla, simplemente no se muestra la información de envío gratis.
+const SHIPPING_RULE_TIMEOUT_MS = 2500;
+function fetchFreeShippingRule() {
+  const request = fetch('/api/shipping-rates')
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => (data && data.free_shipping_rule && data.free_shipping_rule.enabled ? data.free_shipping_rule : null))
+    .catch(() => null);
+  const timeout = new Promise((res) => setTimeout(() => res(null), SHIPPING_RULE_TIMEOUT_MS));
+  return Promise.race([request, timeout]);
+}
+
+function freeShippingTrustText(rule) {
+  const parts = [];
+  if (rule.min_subtotal_cop !== null) parts.push('$' + formatCOP(rule.min_subtotal_cop) + ' COP');
+  if (rule.min_quantity !== null) parts.push(rule.min_quantity + (rule.min_quantity === 1 ? ' producto' : ' productos'));
+  return 'Envío gratis desde ' + parts.join(' o ');
+}
+
+// Progreso hacia el envío gratis con lo que ya hay en el carrito más la
+// selección actual (producto × cantidad). Misma lógica que carrito.js: si hay
+// dos condiciones, se muestra la que está más cerca de cumplirse.
+function renderFreeShippingProgress(rule, extraQty, extraSubtotal) {
+  const bar = document.getElementById('freeShippingBar');
+  const text = document.getElementById('freeShippingBarText');
+  const fill = document.getElementById('freeShippingBarFill');
+  const knob = document.getElementById('freeShippingBarCart');
+  const quantity = Cart.getCount() + extraQty;
+  const subtotal = Cart.getSubtotal() + extraSubtotal;
+
+  let bestRatio = 0;
+  let bestMessage = '';
+  if (rule.min_quantity !== null) {
+    const remaining = Math.max(0, rule.min_quantity - quantity);
+    const ratio = Math.min(1, quantity / rule.min_quantity);
+    if (ratio >= bestRatio) {
+      bestRatio = ratio;
+      bestMessage = `Te falta${remaining === 1 ? '' : 'n'} <strong>${remaining} producto${remaining === 1 ? '' : 's'}</strong> para envío gratis`;
+    }
+  }
+  if (rule.min_subtotal_cop !== null) {
+    const remaining = Math.max(0, rule.min_subtotal_cop - subtotal);
+    const ratio = Math.min(1, subtotal / rule.min_subtotal_cop);
+    if (ratio >= bestRatio) {
+      bestRatio = ratio;
+      bestMessage = `Te faltan <strong>$${formatCOP(remaining)} COP</strong> para envío gratis`;
+    }
+  }
+
+  const complete = bestRatio >= 1;
+  bar.classList.toggle('is-complete', complete);
+  fill.style.width = (bestRatio * 100) + '%';
+  knob.style.left = (bestRatio * 100) + '%';
+  text.innerHTML = complete ? '<strong>¡Tienes envío gratis!</strong>' : bestMessage;
+}
+
+// La barra fija aparece solo cuando "Añadir al carrito" y "Comprar ahora"
+// están fuera de la pantalla, y solo después de pintar el producto (nunca
+// con precio vacío).
+function setupStickyBuy() {
+  const sticky = document.querySelector('.sticky-buy');
+  const targets = [document.getElementById('addToCartBtn'), document.getElementById('buyNowBtn')];
+  const onScreen = new Set();
+  sticky.hidden = false;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => (e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target)));
+    sticky.classList.toggle('is-visible', onScreen.size === 0);
+  }, { threshold: 0 });
+  targets.forEach((el) => io.observe(el));
+}
+
+function renderProduct(product, freeShippingRule) {
   const title = `${product.name} — Café Honey de Huila | Café Arú`;
   const description = truncateWords(`Compra ${product.name}: ${product.description || ''}`, 155);
   const url = SITE_URL + '/producto?slug=' + encodeURIComponent(product.slug);
@@ -200,7 +272,7 @@ function renderProduct(product) {
   document.getElementById('prodDesc').textContent = product.description || '';
   document.getElementById('tabDescLong').textContent = product.description || '';
   document.getElementById('stickyName').textContent = product.name;
-  document.getElementById('stickyPrice').textContent = '$' + formatCOP(product.price_cop);
+  document.getElementById('stickyPrice').textContent = '$' + formatCOP(product.price_cop) + ' COP';
   document.getElementById('stickyImg').src = product.images && product.images[0] ? cldImage(product.images[0].url, 'f_auto,q_auto,w_160') : 'img/product/cafe-aru.webp';
 
   const tagsWrap = document.getElementById('prodTags');
@@ -233,6 +305,7 @@ function renderProduct(product) {
         selectedVariant = option;
         variantOptionsWrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
+        renderQty();
       });
       variantOptionsWrap.appendChild(btn);
     });
@@ -250,6 +323,13 @@ function renderProduct(product) {
   function renderQty() {
     if (qtyDisplay) qtyDisplay.textContent = qty;
     if (totalDisplay) totalDisplay.textContent = '$' + formatCOP(qty * product.price_cop) + ' COP';
+    if (freeShippingRule && !soldOut) renderFreeShippingProgress(freeShippingRule, qty, qty * product.price_cop);
+  }
+  if (freeShippingRule) {
+    document.getElementById('freeShippingTrustText').textContent = freeShippingTrustText(freeShippingRule);
+    document.getElementById('freeShippingTrust').hidden = false;
+    document.getElementById('freeShippingBar').hidden = soldOut;
+    window.addEventListener('cart:change', renderQty);
   }
   document.querySelectorAll('[data-qty-decrease]').forEach((btn) => btn.addEventListener('click', () => {
     qty = Math.max(1, qty - 1); renderQty();
@@ -282,17 +362,21 @@ function renderProduct(product) {
 
   document.getElementById('productLoading').style.display = 'none';
   document.getElementById('productMain').style.display = '';
+  setupStickyBuy();
 
   if (window.Reviews) Reviews.init(product);
 }
 
 async function loadProduct() {
   const slug = new URLSearchParams(location.search).get('slug') || LEGACY_SLUG;
+  // Se piden en paralelo y se pinta todo junto: así la barra y el texto de
+  // envío gratis no aparecen después empujando el contenido.
+  const rulePromise = fetchFreeShippingRule();
   try {
     const res = await fetch('/api/products?slug=' + encodeURIComponent(slug));
     if (!res.ok) throw new Error('not_found');
     const { product } = await res.json();
-    renderProduct(product);
+    renderProduct(product, await rulePromise);
   } catch {
     // Que Google no indexe la página "No encontramos ese producto".
     const robots = document.createElement('meta');
