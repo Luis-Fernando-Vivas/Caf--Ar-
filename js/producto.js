@@ -6,27 +6,91 @@ function formatCOP(n) {
   return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 }
 
+// La imagen principal se muestra 1:1 (object-fit:cover), así que se recorta
+// cuadrada en Cloudinary y se ofrecen varios anchos: en móvil baja ~600px en
+// vez de 1000px.
+const GALLERY_WIDTHS = [600, 900, 1200];
+const GALLERY_SIZES = '(max-width: 900px) calc(100vw - 2.5rem), 600px';
+const FADE_MS = 250;
+
+function gallerySources(url) {
+  return {
+    src: cldImage(url, 'f_auto,q_auto,c_fill,ar_1:1,w_900'),
+    srcset: GALLERY_WIDTHS.map((w) => `${cldImage(url, `f_auto,q_auto,c_fill,ar_1:1,w_${w}`)} ${w}w`).join(', '),
+  };
+}
+
+// Descarga y decodifica una imagen con los mismos srcset/sizes que la
+// principal (así el navegador elige el mismo archivo y queda en caché).
+// Se memoriza por URL: cada imagen se descarga una sola vez.
+const galleryCache = new Map();
+function loadGalleryImage(url) {
+  if (!galleryCache.has(url)) {
+    const { src, srcset } = gallerySources(url);
+    const pre = new Image();
+    pre.sizes = GALLERY_SIZES;
+    pre.srcset = srcset;
+    pre.src = src;
+    const ready = (pre.decode ? pre.decode() : new Promise((res, rej) => { pre.onload = res; pre.onerror = rej; }))
+      .catch(() => {}); // si falla, se muestra igual y el navegador lo resuelve
+    galleryCache.set(url, ready);
+  }
+  return galleryCache.get(url);
+}
+
 function setupGallery(images) {
   const mainImg = document.getElementById('galleryMain');
   const thumbsWrap = document.getElementById('productThumbs');
   thumbsWrap.innerHTML = '';
+  mainImg.sizes = GALLERY_SIZES;
 
-  if (!images.length) return;
-  mainImg.src = cldImage(images[0].url, 'f_auto,q_auto,w_1000');
+  const show = (url) => {
+    const { src, srcset } = gallerySources(url);
+    mainImg.srcset = srcset;
+    mainImg.src = src;
+    mainImg.classList.add('is-loaded');
+  };
 
+  if (!images.length) {
+    mainImg.src = 'img/product/cafe-aru.webp';
+    mainImg.classList.add('is-loaded');
+    return;
+  }
+
+  mainImg.fetchPriority = 'high';
+  loadGalleryImage(images[0].url).then(() => {
+    show(images[0].url);
+    // Con la primera ya visible, se precargan las demás en segundo plano
+    // para que cambiar de miniatura sea instantáneo.
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 300));
+    idle(() => images.slice(1).forEach((img) => loadGalleryImage(img.url)));
+  });
+
+  let current = 0;
+  let pending = 0; // descarta clics viejos si el usuario cambia rápido
   images.forEach((img, i) => {
     const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('aria-label', `Ver imagen ${i + 1}`);
     if (i === 0) btn.className = 'active';
     const thumbImg = document.createElement('img');
-    thumbImg.src = cldImage(img.url, 'f_auto,q_auto,w_200');
+    thumbImg.src = cldImage(img.url, 'f_auto,q_auto,c_fill,ar_1:1,w_200');
     thumbImg.alt = '';
-    thumbImg.loading = 'lazy';
+    thumbImg.decoding = 'async';
     btn.appendChild(thumbImg);
     btn.addEventListener('click', () => {
+      if (i === current) return;
+      current = i;
+      const token = ++pending;
       thumbsWrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      mainImg.style.opacity = 0;
-      setTimeout(() => { mainImg.src = cldImage(img.url, 'f_auto,q_auto,w_1000'); mainImg.style.opacity = 1; }, 250);
+      mainImg.classList.remove('is-loaded');
+      // Se cambia solo cuando terminó el fade-out Y la nueva imagen ya está
+      // decodificada: nunca se vuelve a mostrar la anterior.
+      const faded = new Promise((res) => setTimeout(res, FADE_MS));
+      Promise.all([loadGalleryImage(img.url), faded]).then(() => {
+        if (token === pending) show(img.url);
+      });
     });
     thumbsWrap.appendChild(btn);
   });
