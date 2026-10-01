@@ -421,7 +421,7 @@ function renderOrders(orders){
     const channelWrap = document.createElement('span');
     channelWrap.className = 'cell-channel-wrap';
     const channelText = document.createElement('span');
-    channelText.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
+    channelText.textContent = o.payment_url ? 'Wompi · Link' : o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
     channelWrap.appendChild(channelText);
     if (o.channel === 'wompi') {
       const envBadge = document.createElement('span');
@@ -481,7 +481,7 @@ function openOrderModal(o){
   badges.appendChild(statusBadge);
   const channelBadge = document.createElement('span');
   channelBadge.className = 'env-badge badge-neutral';
-  channelBadge.textContent = o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
+  channelBadge.textContent = o.payment_url ? 'Wompi · Link' : o.channel === 'wompi' ? 'Wompi' : 'WhatsApp';
   badges.appendChild(channelBadge);
   if (o.channel === 'wompi') {
     const env = o.environment === 'test' ? 'test' : 'prod';

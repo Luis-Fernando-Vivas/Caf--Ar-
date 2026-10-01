@@ -12,8 +12,8 @@
 // serverless aparte (Vercel Hobby limita a 12 por deployment).
 
 const crypto = require('crypto');
-const { sql, ensureSchema, isConfigured } = require('./_lib/db');
-const { computeTotals, CheckoutError } = require('./_lib/checkout');
+const { ensureSchema, isConfigured } = require('./_lib/db');
+const { computeTotals, createOrder, CheckoutError } = require('./_lib/checkout');
 const { getWompiEnvironment, getWompiKeys } = require('./_lib/wompi-env');
 const { clientIp, isRateLimited, recordHit } = require('./_lib/rate-limit');
 
@@ -115,47 +115,24 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Reserva el uso del cupón de forma atómica: si dos pedidos llegan a la vez
-    // con el último uso disponible, solo uno lo consigue.
-    if (totals.coupon) {
-      const reserved = await sql`
-        UPDATE coupons SET times_used = times_used + 1
-        WHERE id = ${totals.coupon.id} AND (usage_limit IS NULL OR times_used < usage_limit)
-        RETURNING id
-      `;
-      if (!reserved.length) {
-        res.status(400).json({ error: 'invalid_coupon', message: 'Ese cupón ya alcanzó su límite de usos.' });
+    let reference;
+    try {
+      ({ reference } = await createOrder({
+        totals,
+        channel,
+        status: channel === 'wompi' ? 'pending' : 'whatsapp_pending',
+        environment,
+        shipping_rate_id: body.shipping_rate_id,
+        customer: { name: customerName, address: customerAddress, phone: customerPhone },
+      }));
+    } catch (err) {
+      if (err instanceof CheckoutError) {
+        res.status(400).json({ error: err.code, message: err.message });
         return;
       }
+      throw err;
     }
-
-    const reference = `ARU-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    const totalQuantity = totals.lines.reduce((sum, l) => sum + l.quantity, 0);
-    const status = channel === 'wompi' ? 'pending' : 'whatsapp_pending';
-
-    const orderRows = await sql`
-      INSERT INTO orders (
-        reference, channel, status, quantity, unit_price_cop, amount_cop, environment,
-        shipping_rate_id, shipping_name, shipping_cop, coupon_code, discount_cop, subtotal_cop,
-        customer_name, customer_address, customer_phone
-      )
-      VALUES (
-        ${reference}, ${channel}, ${status}, ${totalQuantity}, 0, ${totals.amount_cop}, ${environment || 'prod'},
-        ${body.shipping_rate_id || null}, ${totals.shipping_name}, ${totals.shipping_cop},
-        ${totals.coupon ? totals.coupon.code : null}, ${totals.discount_cop}, ${totals.subtotal_cop},
-        ${customerName || null}, ${customerAddress || null}, ${customerPhone || null}
-      )
-      RETURNING id
-    `;
-    const orderId = orderRows[0].id;
     await recordHit('order', ip);
-
-    for (const line of totals.lines) {
-      await sql`
-        INSERT INTO order_items (order_id, product_id, product_name, unit_price_cop, quantity, line_total_cop)
-        VALUES (${orderId}, ${line.product_id}, ${line.product_name}, ${line.unit_price_cop}, ${line.quantity}, ${line.line_total_cop})
-      `;
-    }
 
     if (channel === 'wompi') {
       const currency = 'COP';

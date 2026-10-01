@@ -24,7 +24,7 @@ let schemaReady = null;
 // el guardado en `settings`, ensureSchema se resuelve con UNA sola consulta en
 // vez de ~30 viajes secuenciales a Neon (lo que hacía lenta la primera carga
 // de la tienda en cada arranque en frío de la función).
-const SCHEMA_VERSION = '3';
+const SCHEMA_VERSION = '4';
 
 async function schemaIsCurrent() {
   try {
@@ -147,6 +147,9 @@ function ensureSchema() {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT;`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ;`;
+      // Link de pago de Wompi generado desde el backoffice (/admin/payment-links).
+      // Solo lo tienen esos pedidos; los del carrito lo dejan en NULL.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_url TEXT;`;
       // Límite de peticiones por IP (login, pedidos, reseñas, cupones) -- ver
       // api/_lib/rate-limit.js. Reemplaza a la tabla login_attempts de la v2.
       await sql`

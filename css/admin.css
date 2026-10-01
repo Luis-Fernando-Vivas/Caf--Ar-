@@ -318,3 +318,39 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-w
   padding:.5em .8em; border-radius:8px; border:1px solid rgba(36,27,18,.18); font-family:inherit; font-size:.86rem;
   background:var(--c-cream); color:var(--c-text);
 }
+
+/* ---------- generador de links de pago ---------- */
+.wompi-env-banner[hidden]{ display:none; }
+.paylink-section-title{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--c-text-soft);
+  margin:1.6rem 0 .8rem;
+}
+.paylink-section-title:first-child{ margin-top:0; }
+.paylink-lines{ display:flex; flex-direction:column; gap:.6rem; margin-bottom:.8rem; }
+.paylink-line{ display:grid; grid-template-columns:minmax(0,1fr) auto 5rem 2rem; gap:.6rem; align-items:center; }
+.paylink-line select, .paylink-line input{
+  padding:.65em .85em; border-radius:8px; border:1px solid rgba(36,27,18,.18);
+  font-family:inherit; font-size:.9rem; background:var(--c-cream); color:var(--c-text); min-width:0;
+}
+.paylink-line select[hidden]{ display:none; }
+.paylink-line .line-remove{
+  border:none; background:var(--c-cream); color:var(--c-text-soft); width:2rem; height:2rem; border-radius:100px;
+  font-size:1.1rem; line-height:1; cursor:pointer;
+}
+.paylink-line .line-remove:hover{ color:var(--c-red); }
+@media (max-width:640px){
+  .paylink-line{ grid-template-columns:minmax(0,1fr) 4.5rem 2rem; }
+  .paylink-line .line-product{ grid-column:1 / -1; }
+}
+.paylink-summary{ margin-top:1.4rem; max-width:460px; }
+.paylink-summary:empty{ display:none; }
+.paylink-result{
+  margin-top:1.2rem; padding:1rem 1.1rem; border-radius:12px; background:rgba(12,163,12,.08);
+}
+.paylink-result[hidden]{ display:none; }
+.paylink-result p{ margin:0 0 .6rem; font-size:.86rem; }
+.paylink-result-row{ display:flex; gap:.6rem; flex-wrap:wrap; }
+.paylink-result-row input{
+  flex:1 1 260px; min-width:0; padding:.55em .8em; border-radius:8px; border:1px solid rgba(36,27,18,.18);
+  font-family:inherit; font-size:.82rem; background:var(--c-white); color:var(--c-text);
+}

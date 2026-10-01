@@ -130,4 +130,51 @@ async function computeTotals({ items, shipping_rate_id, coupon_code }) {
   };
 }
 
-module.exports = { computeTotals, CheckoutError };
+// Guarda el pedido y sus líneas a partir de los totales ya calculados por
+// computeTotals. Compartido entre el checkout público (api/checkout.js) y el
+// generador de links de pago del backoffice (api/admin/orders.js).
+async function createOrder({ totals, channel, status, environment, shipping_rate_id, customer = {}, payment_url = null }) {
+  // Reserva el uso del cupón de forma atómica: si dos pedidos llegan a la vez
+  // con el último uso disponible, solo uno lo consigue.
+  if (totals.coupon) {
+    const reserved = await sql`
+      UPDATE coupons SET times_used = times_used + 1
+      WHERE id = ${totals.coupon.id} AND (usage_limit IS NULL OR times_used < usage_limit)
+      RETURNING id
+    `;
+    if (!reserved.length) {
+      throw new CheckoutError('invalid_coupon', 'Ese cupón ya alcanzó su límite de usos.');
+    }
+  }
+
+  const reference = `ARU-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const totalQuantity = totals.lines.reduce((sum, l) => sum + l.quantity, 0);
+
+  const orderRows = await sql`
+    INSERT INTO orders (
+      reference, channel, status, quantity, unit_price_cop, amount_cop, environment,
+      shipping_rate_id, shipping_name, shipping_cop, coupon_code, discount_cop, subtotal_cop,
+      customer_name, customer_address, customer_phone, customer_email, payment_url
+    )
+    VALUES (
+      ${reference}, ${channel}, ${status}, ${totalQuantity}, 0, ${totals.amount_cop}, ${environment || 'prod'},
+      ${shipping_rate_id || null}, ${totals.shipping_name}, ${totals.shipping_cop},
+      ${totals.coupon ? totals.coupon.code : null}, ${totals.discount_cop}, ${totals.subtotal_cop},
+      ${customer.name || null}, ${customer.address || null}, ${customer.phone || null}, ${customer.email || null},
+      ${payment_url}
+    )
+    RETURNING id
+  `;
+  const orderId = orderRows[0].id;
+
+  for (const line of totals.lines) {
+    await sql`
+      INSERT INTO order_items (order_id, product_id, product_name, unit_price_cop, quantity, line_total_cop)
+      VALUES (${orderId}, ${line.product_id}, ${line.product_name}, ${line.unit_price_cop}, ${line.quantity}, ${line.line_total_cop})
+    `;
+  }
+
+  return { id: orderId, reference };
+}
+
+module.exports = { computeTotals, createOrder, CheckoutError };
