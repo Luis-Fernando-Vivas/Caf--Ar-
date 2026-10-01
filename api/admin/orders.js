@@ -10,12 +10,18 @@
 // webhook de Wompi confirma el pago por la referencia como cualquier otro
 // pedido. Vive aquí -- y no en un endpoint aparte -- para no sumar otra función
 // serverless al límite de 12 de Vercel Hobby.
+//
+// POST { manual:true, items, shipping_rate_id, coupon_code, customer, status, send_email }
+// registra un pedido que llegó por fuera de la página (WhatsApp, en persona...)
+// con los mismos totales que el carrito, y envía los correos de notificación
+// al negocio y al cliente igual que el webhook de Wompi con un pago aprobado.
 
 const crypto = require('crypto');
 const { isAuthenticated } = require('../_lib/auth');
 const { sql, ensureSchema, isConfigured } = require('../_lib/db');
 const { computeTotals, createOrder, CheckoutError } = require('../_lib/checkout');
 const { getWompiEnvironment, getWompiKeys } = require('../_lib/wompi-env');
+const { sendAdminOrderNotification, sendCustomerOrderConfirmation } = require('../_lib/notify');
 
 const ALLOWED_STATUSES = [
   'pending',
@@ -27,6 +33,9 @@ const ALLOWED_STATUSES = [
   'shipped',
   'cancelled',
 ];
+
+// Estados con los que se puede registrar un pedido manual.
+const MANUAL_STATUSES = ['paid_manually', 'whatsapp_pending'];
 
 function parseBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
@@ -43,6 +52,27 @@ function phoneDigits(raw) {
   let digits = String(raw || '').replace(/\D/g, '');
   if (digits.length === 12 && digits.startsWith('57')) digits = digits.slice(2);
   return digits;
+}
+
+// Valida los datos del cliente que llegan del formulario del backoffice. Si
+// algo falta responde 400 y devuelve null.
+function parseCustomer(body, res) {
+  const c = body.customer || {};
+  const customer = {
+    name: String(c.name || '').trim().slice(0, 200),
+    phone: String(c.phone || '').trim().slice(0, 40),
+    email: String(c.email || '').trim().toLowerCase().slice(0, 200),
+    address: String(c.address || '').trim().slice(0, 300),
+  };
+  if (!customer.name || !customer.phone || !customer.address) {
+    res.status(400).json({ error: 'missing_customer_data', message: 'Faltan nombre, teléfono o dirección del cliente.' });
+    return null;
+  }
+  if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
+    res.status(400).json({ error: 'invalid_email', message: 'El correo del cliente no es válido.' });
+    return null;
+  }
+  return customer;
 }
 
 function buildWompiCheckoutUrl({ publicKey, integritySecret, reference, amountCop, expiresAt, redirectUrl, customer }) {
@@ -107,21 +137,8 @@ async function createPaymentLink(req, res) {
     return;
   }
 
-  const c = body.customer || {};
-  const customer = {
-    name: String(c.name || '').trim().slice(0, 200),
-    phone: String(c.phone || '').trim().slice(0, 40),
-    email: String(c.email || '').trim().toLowerCase().slice(0, 200),
-    address: String(c.address || '').trim().slice(0, 300),
-  };
-  if (!customer.name || !customer.phone || !customer.address) {
-    res.status(400).json({ error: 'missing_customer_data', message: 'Faltan nombre, teléfono o dirección del cliente.' });
-    return;
-  }
-  if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
-    res.status(400).json({ error: 'invalid_email', message: 'El correo del cliente no es válido.' });
-    return;
-  }
+  const customer = parseCustomer(body, res);
+  if (!customer) return;
   if (totals.amount_cop < 1500) {
     res.status(400).json({ error: 'amount_too_low', message: 'Wompi no acepta cobros menores a $1.500 COP.' });
     return;
@@ -188,6 +205,51 @@ async function createPaymentLink(req, res) {
   });
 }
 
+async function createManualOrder(body, res) {
+  const customer = parseCustomer(body, res);
+  if (!customer) return;
+  const status = MANUAL_STATUSES.includes(body.status) ? body.status : 'paid_manually';
+
+  let order;
+  try {
+    const totals = await computeTotals(body);
+    order = await createOrder({
+      totals,
+      channel: 'whatsapp',
+      status,
+      environment: 'prod',
+      shipping_rate_id: body.shipping_rate_id,
+      customer,
+    });
+  } catch (err) {
+    if (err instanceof CheckoutError) {
+      res.status(400).json({ error: err.code, message: err.message, ...err.extra });
+      return;
+    }
+    throw err;
+  }
+
+  // Mismos correos que manda el webhook de Wompi con un pago aprobado. Se
+  // esperan antes de responder: la función serverless se congela al responder.
+  let emailed = false;
+  if (body.send_email !== false) {
+    const [saved] = await sql`SELECT * FROM orders WHERE id = ${order.id}`;
+    const items = await sql`SELECT * FROM order_items WHERE order_id = ${order.id}`;
+    await sql`UPDATE orders SET notified_at = now() WHERE id = ${order.id}`;
+    await Promise.all([
+      sendAdminOrderNotification(saved, items).catch((err) =>
+        console.error('Error enviando notificación de pedido manual al admin:', err)
+      ),
+      sendCustomerOrderConfirmation(saved, items).catch((err) =>
+        console.error('Error enviando confirmación de pedido manual al cliente:', err)
+      ),
+    ]);
+    emailed = true;
+  }
+
+  res.status(201).json({ id: order.id, reference: order.reference, status, emailed });
+}
+
 module.exports = async (req, res) => {
   if (!isAuthenticated(req)) {
     res.status(401).json({ error: 'unauthorized' });
@@ -233,6 +295,12 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
+      let body = null;
+      try { body = parseBody(req); } catch {}
+      if (body && body.manual && !body.preview) {
+        await createManualOrder(body, res);
+        return;
+      }
       await createPaymentLink(req, res);
       return;
     }

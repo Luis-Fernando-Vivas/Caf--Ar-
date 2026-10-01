@@ -106,6 +106,7 @@
       <div class="admin-panel">
         <div class="admin-panel-head">
           <h2>Pedidos</h2>
+          <button id="newOrderBtn" class="btn btn-primary btn-sm" type="button">+ Agregar pedido</button>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
@@ -159,6 +160,70 @@
       <select id="modalStatusSelect"></select>
     </div>
   </div>
+</div>
+
+<div id="newOrderOverlay" class="modal-overlay" hidden>
+  <form id="newOrderForm" class="modal-card" role="dialog" aria-modal="true" aria-labelledby="newOrderTitle" novalidate>
+    <div class="modal-head">
+      <div>
+        <h2 id="newOrderTitle">Agregar pedido</h2>
+        <p class="admin-form-hint" style="margin:0;">Para pedidos que llegan por WhatsApp u otro canal fuera de la página.</p>
+      </div>
+      <button id="newOrderCloseBtn" class="modal-close" type="button" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3 class="paylink-section-title">Cliente</h3>
+      <div class="admin-form-grid">
+        <div class="admin-form-field">
+          <label for="noName">Nombre completo</label>
+          <input id="noName" autocomplete="off" required>
+        </div>
+        <div class="admin-form-field">
+          <label for="noPhone">Celular</label>
+          <input id="noPhone" type="tel" placeholder="300 123 4567" autocomplete="off" required>
+        </div>
+        <div class="admin-form-field span-2">
+          <label for="noEmail">Correo (opcional)</label>
+          <input id="noEmail" type="email" autocomplete="off">
+          <span class="admin-form-hint">Si lo llenas, al cliente le llega el correo de confirmación del pedido.</span>
+        </div>
+        <div class="admin-form-field span-2">
+          <label for="noAddress">Dirección de envío</label>
+          <input id="noAddress" placeholder="Calle 00 # 00-00, barrio, ciudad, departamento" autocomplete="off" required>
+        </div>
+      </div>
+
+      <h3 class="paylink-section-title">Productos</h3>
+      <div id="noLinesWrap" class="paylink-lines"></div>
+      <button id="noAddLineBtn" type="button" class="btn btn-ghost btn-sm">+ Agregar producto</button>
+
+      <h3 class="paylink-section-title">Envío, descuento y estado</h3>
+      <div class="admin-form-grid">
+        <div class="admin-form-field">
+          <label for="noShipping">Envío</label>
+          <select id="noShipping"><option value="">Sin envío</option></select>
+        </div>
+        <div class="admin-form-field">
+          <label for="noCoupon">Cupón (opcional)</label>
+          <input id="noCoupon" autocomplete="off" style="text-transform:uppercase;">
+        </div>
+        <div class="admin-form-field">
+          <label for="noStatus">Estado</label>
+          <select id="noStatus">
+            <option value="paid_manually">Pagado (manual)</option>
+            <option value="whatsapp_pending">Pendiente de pago</option>
+          </select>
+        </div>
+      </div>
+
+      <dl id="noSummary" class="modal-dl modal-totals paylink-summary"></dl>
+      <div class="admin-form-error" id="noError"></div>
+    </div>
+    <div class="modal-foot">
+      <label class="admin-check"><input id="noSendEmail" type="checkbox" checked> Enviar correos de notificación</label>
+      <button id="noSubmitBtn" type="submit" class="btn btn-primary btn-sm" style="margin-left:auto;">Registrar pedido</button>
+    </div>
+  </form>
 </div>
 
 <script src="../js/admin.js"></script>

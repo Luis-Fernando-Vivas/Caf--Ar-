@@ -319,6 +319,9 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-w
   background:var(--c-cream); color:var(--c-text);
 }
 
+.modal-foot .admin-check{ display:inline-flex; align-items:center; gap:.45em; font-weight:500; color:var(--c-text); cursor:pointer; }
+.modal-foot .admin-check input{ accent-color:var(--c-red); width:1rem; height:1rem; }
+
 /* ---------- generador de links de pago ---------- */
 .wompi-env-banner[hidden]{ display:none; }
 .paylink-section-title{

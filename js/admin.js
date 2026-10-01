@@ -654,6 +654,251 @@ function initWompiEnvSwitch(){
   });
 }
 
+/* ---------------- agregar pedido manual (WhatsApp, etc.) ---------------- */
+// Mismo selector de productos que /admin/payment-links (js/admin-payment-links.js):
+// los totales los recalcula el servidor con los precios, envío y cupones reales.
+let newOrderProducts = null;
+let newOrderPreviewTimer = null;
+let newOrderPreviewSeq = 0;
+
+async function loadNewOrderCatalog(){
+  const [productsRes, ratesRes] = await Promise.all([
+    fetch('/api/admin/products'),
+    fetch('/api/admin/shipping-rates'),
+  ]);
+  if (productsRes.status === 401) {
+    window.location.href = '/admin/login';
+    return;
+  }
+  newOrderProducts = [];
+  if (productsRes.ok) {
+    const data = await productsRes.json();
+    newOrderProducts = (data.products || []).filter((p) => p.status === 'active');
+  }
+  if (ratesRes.ok) {
+    const { rates } = await ratesRes.json();
+    const sel = document.getElementById('noShipping');
+    rates.filter((r) => r.is_active).forEach((r, i) => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = `${r.name} — $${formatCOP(r.amount_cop)}`;
+      if (i === 0) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function addNewOrderLine(){
+  const wrap = document.getElementById('noLinesWrap');
+  const row = document.createElement('div');
+  row.className = 'paylink-line';
+
+  const productSel = document.createElement('select');
+  productSel.className = 'line-product';
+  productSel.setAttribute('aria-label', 'Producto');
+  newOrderProducts.forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.name} — $${formatCOP(p.price_cop)}`;
+    productSel.appendChild(opt);
+  });
+
+  const variantSel = document.createElement('select');
+  variantSel.className = 'line-variant';
+  variantSel.setAttribute('aria-label', 'Presentación');
+
+  const qty = document.createElement('input');
+  qty.type = 'number';
+  qty.min = '1';
+  qty.max = '20';
+  qty.value = 1;
+  qty.className = 'line-qty';
+  qty.setAttribute('aria-label', 'Cantidad');
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'line-remove';
+  removeBtn.setAttribute('aria-label', 'Quitar producto');
+  removeBtn.textContent = '×';
+  removeBtn.addEventListener('click', () => { row.remove(); scheduleNewOrderPreview(); });
+
+  const fillVariants = () => {
+    const product = newOrderProducts.find((p) => String(p.id) === productSel.value);
+    const options = (product && product.grind_options) || [];
+    variantSel.innerHTML = '';
+    options.forEach((v) => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      variantSel.appendChild(opt);
+    });
+    variantSel.hidden = !options.length;
+  };
+  fillVariants();
+
+  productSel.addEventListener('change', () => { fillVariants(); scheduleNewOrderPreview(); });
+  variantSel.addEventListener('change', scheduleNewOrderPreview);
+  qty.addEventListener('input', scheduleNewOrderPreview);
+
+  row.append(productSel, variantSel, qty, removeBtn);
+  wrap.appendChild(row);
+  scheduleNewOrderPreview();
+}
+
+function collectNewOrderPayload(){
+  return {
+    manual: true,
+    items: Array.from(document.querySelectorAll('#noLinesWrap .paylink-line')).map((row) => ({
+      product_id: parseInt(row.querySelector('.line-product').value, 10),
+      variant: row.querySelector('.line-variant').value || undefined,
+      quantity: parseInt(row.querySelector('.line-qty').value, 10) || 1,
+    })),
+    shipping_rate_id: document.getElementById('noShipping').value || null,
+    coupon_code: document.getElementById('noCoupon').value.trim() || null,
+    status: document.getElementById('noStatus').value,
+    send_email: document.getElementById('noSendEmail').checked,
+    customer: {
+      name: document.getElementById('noName').value.trim(),
+      phone: document.getElementById('noPhone').value.trim(),
+      email: document.getElementById('noEmail').value.trim(),
+      address: document.getElementById('noAddress').value.trim(),
+    },
+  };
+}
+
+function scheduleNewOrderPreview(){
+  clearTimeout(newOrderPreviewTimer);
+  newOrderPreviewTimer = setTimeout(runNewOrderPreview, 300);
+}
+
+async function runNewOrderPreview(){
+  const summary = document.getElementById('noSummary');
+  const errorEl = document.getElementById('noError');
+  const payload = collectNewOrderPayload();
+  if (!payload.items.length) {
+    summary.innerHTML = '';
+    return;
+  }
+
+  const seq = ++newOrderPreviewSeq;
+  const res = await fetch('/api/admin/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, preview: true }),
+  });
+  if (seq !== newOrderPreviewSeq) return;
+  const data = await res.json().catch(() => ({}));
+
+  summary.innerHTML = '';
+  if (!res.ok) {
+    errorEl.textContent = data.message || 'No se pudo calcular el total.';
+    return;
+  }
+  errorEl.textContent = '';
+
+  const addRow = (label, value, isTotal) => {
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value;
+    if (isTotal) { dt.classList.add('modal-total-row'); dd.classList.add('modal-total-row'); }
+    summary.append(dt, dd);
+  };
+  addRow('Subtotal', '$' + formatCOP(data.subtotal_cop));
+  if (data.shipping_name) {
+    addRow(
+      `Envío (${data.shipping_name})`,
+      data.free_shipping_applied ? `Gratis (antes $${formatCOP(data.shipping_original_cop)})` : '$' + formatCOP(data.shipping_cop)
+    );
+  }
+  if (data.discount_cop > 0) addRow('Descuento', '-$' + formatCOP(data.discount_cop));
+  addRow('Total', '$' + formatCOP(data.amount_cop) + ' COP', true);
+}
+
+function resetNewOrderForm(){
+  ['noName', 'noPhone', 'noEmail', 'noAddress', 'noCoupon'].forEach((id) => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('noStatus').value = 'paid_manually';
+  document.getElementById('noSendEmail').checked = true;
+  document.getElementById('noError').textContent = '';
+  document.getElementById('noLinesWrap').innerHTML = '';
+  if (newOrderProducts.length) addNewOrderLine();
+}
+
+async function openNewOrderModal(){
+  const overlay = document.getElementById('newOrderOverlay');
+  overlay.hidden = false;
+  if (!newOrderProducts) {
+    await loadNewOrderCatalog();
+    if (!newOrderProducts) return;
+    resetNewOrderForm();
+  }
+  if (!newOrderProducts.length) {
+    document.getElementById('noError').textContent = 'No hay productos activos en el catálogo.';
+  }
+  document.getElementById('noName').focus();
+}
+
+function closeNewOrderModal(){
+  document.getElementById('newOrderOverlay').hidden = true;
+}
+
+async function submitNewOrder(e){
+  e.preventDefault();
+  const errorEl = document.getElementById('noError');
+  const submitBtn = document.getElementById('noSubmitBtn');
+  errorEl.textContent = '';
+
+  const payload = collectNewOrderPayload();
+  if (!payload.customer.name || !payload.customer.phone || !payload.customer.address) {
+    errorEl.textContent = 'Completa nombre, celular y dirección del cliente.';
+    return;
+  }
+  if (!payload.items.length) {
+    errorEl.textContent = 'Agrega al menos un producto.';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  try {
+    const res = await fetch('/api/admin/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+      return;
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      errorEl.textContent = data.message || 'No se pudo registrar el pedido.';
+      return;
+    }
+    resetNewOrderForm();
+    closeNewOrderModal();
+    await loadOrders();
+  } catch {
+    errorEl.textContent = 'No se pudo conectar con el servidor.';
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+function initNewOrderModal(){
+  const overlay = document.getElementById('newOrderOverlay');
+  if (!overlay) return;
+  document.getElementById('newOrderBtn').addEventListener('click', openNewOrderModal);
+  document.getElementById('newOrderCloseBtn').addEventListener('click', closeNewOrderModal);
+  overlay.addEventListener('click', (evt) => { if (evt.target === overlay) closeNewOrderModal(); });
+  document.addEventListener('keydown', (evt) => { if (evt.key === 'Escape' && !overlay.hidden) closeNewOrderModal(); });
+  document.getElementById('newOrderForm').addEventListener('submit', submitNewOrder);
+  document.getElementById('noAddLineBtn').addEventListener('click', () => {
+    if (newOrderProducts && newOrderProducts.length) addNewOrderLine();
+  });
+  document.getElementById('noShipping').addEventListener('change', scheduleNewOrderPreview);
+  document.getElementById('noCoupon').addEventListener('input', scheduleNewOrderPreview);
+}
+
 function initDashboardPage(){
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;
@@ -662,6 +907,7 @@ function initDashboardPage(){
   loadWompiEnv();
   initWompiEnvSwitch();
   initOrderModal();
+  initNewOrderModal();
 
   document.getElementById('refreshBtn')?.addEventListener('click', () => { loadOrders(); loadWompiEnv(); });
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {

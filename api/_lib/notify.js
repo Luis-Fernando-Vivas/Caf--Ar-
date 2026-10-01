@@ -2,7 +2,9 @@
 //
 // Se dispara desde api/webhooks/wompi.js cuando un pedido pasa a estado
 // APPROVED por primera vez: un correo al negocio con el detalle completo del
-// pedido, y otro al cliente confirmando su compra.
+// pedido, y otro al cliente confirmando su compra. También desde
+// api/admin/orders.js al registrar a mano un pedido de WhatsApp (channel
+// 'whatsapp'), que puede estar ya pagado o pendiente de pago.
 //
 // Variables de entorno requeridas (ver .env.example):
 //   RESEND_API_KEY      -- API key de Resend (re_...)
@@ -200,6 +202,8 @@ async function sendAdminOrderNotification(order, items) {
   }
 
   const isTest = order.environment === 'test';
+  const isManual = order.channel === 'whatsapp';
+  const isPaid = order.status !== 'whatsapp_pending';
   const contactRowStyle = `padding:4px 0;font-family:'Inter',Arial,sans-serif;font-size:14px;color:${BRAND.text};`;
 
   const bodyHtml = `
@@ -224,10 +228,14 @@ async function sendAdminOrderNotification(order, items) {
   `;
 
   const html = shellHtml({
-    preheader: `Nuevo pedido pagado — ${order.reference}`,
-    badge: isTest ? 'Modo prueba · Sandbox' : 'Pago confirmado',
+    preheader: `Nuevo pedido${isPaid ? ' pagado' : ''} — ${order.reference}`,
+    badge: isTest
+      ? 'Modo prueba · Sandbox'
+      : isManual ? `WhatsApp · ${isPaid ? 'Pagado' : 'Pendiente de pago'}` : 'Pago confirmado',
     heading: 'Tienes un pedido nuevo ☕',
-    intro: 'Este pedido acaba de ser aprobado por Wompi. Aquí el detalle completo para prepararlo y coordinar el envío.',
+    intro: isManual
+      ? `Este pedido de WhatsApp se acaba de registrar desde el backoffice${isPaid ? ' como pagado' : ' y todavía está pendiente de pago'}. Aquí el detalle completo para prepararlo y coordinar el envío.`
+      : 'Este pedido acaba de ser aprobado por Wompi. Aquí el detalle completo para prepararlo y coordinar el envío.',
     bodyHtml,
     footerNote: 'Actualiza el estado de este pedido desde el backoffice en cuanto lo despaches.',
   });
@@ -241,6 +249,7 @@ async function sendAdminOrderNotification(order, items) {
 
 async function sendCustomerOrderConfirmation(order, items) {
   if (!order.customer_email) return;
+  const isPaid = order.status !== 'whatsapp_pending';
 
   const bodyHtml = `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -251,9 +260,11 @@ async function sendCustomerOrderConfirmation(order, items) {
 
   const html = shellHtml({
     preheader: `Confirmamos tu pedido ${order.reference}`,
-    badge: 'Pedido confirmado',
-    heading: '¡Gracias por tu compra!',
-    intro: `Ya recibimos tu pago y estamos preparando tu pedido con mucho cariño. Este es el resumen de <strong>${esc(order.reference)}</strong>:`,
+    badge: isPaid ? 'Pedido confirmado' : 'Pedido recibido',
+    heading: isPaid ? '¡Gracias por tu compra!' : '¡Gracias por tu pedido!',
+    intro: isPaid
+      ? `Ya recibimos tu pago y estamos preparando tu pedido con mucho cariño. Este es el resumen de <strong>${esc(order.reference)}</strong>:`
+      : `Ya registramos tu pedido. En cuanto confirmemos tu pago lo preparamos con mucho cariño. Este es el resumen de <strong>${esc(order.reference)}</strong>:`,
     bodyHtml,
     footerNote: 'Te avisaremos por aquí en cuanto tu pedido salga hacia el envío. Si tienes alguna pregunta, solo responde a este correo.',
   });
