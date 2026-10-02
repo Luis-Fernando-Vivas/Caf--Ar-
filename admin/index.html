@@ -158,6 +158,40 @@
         <h3>Resumen</h3>
         <dl id="modalTotals" class="modal-dl modal-totals"></dl>
       </div>
+      <div class="modal-section" id="modalShipInfoSection" hidden>
+        <h3>Despacho</h3>
+        <dl id="modalShipInfo" class="modal-dl"></dl>
+        <button id="modalShipEditBtn" type="button" class="btn btn-ghost btn-sm" style="margin-top:.7rem;">Editar guía / reenviar correo</button>
+      </div>
+    </div>
+    <div id="modalShipPanel" class="modal-ship-panel" hidden>
+      <h3>Datos del despacho</h3>
+      <div class="admin-form-grid">
+        <div class="admin-form-field">
+          <label for="modalCarrier">Transportadora</label>
+          <select id="modalCarrier"></select>
+        </div>
+        <div class="admin-form-field" id="modalCarrierOtherField" hidden>
+          <label for="modalCarrierOther">Nombre de la transportadora</label>
+          <input id="modalCarrierOther" autocomplete="off">
+        </div>
+        <div class="admin-form-field">
+          <label for="modalTrackingNumber">Número de guía</label>
+          <input id="modalTrackingNumber" autocomplete="off">
+        </div>
+        <div class="admin-form-field span-2">
+          <label for="modalTrackingUrl">Link de rastreo</label>
+          <input id="modalTrackingUrl" type="url" placeholder="https://..." autocomplete="off">
+          <span class="admin-form-hint">Se llena solo según la transportadora. Si tienes un link directo a la guía, pégalo aquí.</span>
+        </div>
+      </div>
+      <div class="modal-ship-actions">
+        <label class="admin-check"><input id="modalShipEmail" type="checkbox" checked> Enviar correo de despacho al cliente</label>
+        <span id="modalShipNoEmail" class="admin-form-hint" hidden>Este pedido no tiene correo: solo se guardará la guía.</span>
+        <button id="modalShipCancelBtn" type="button" class="btn btn-ghost btn-sm" style="margin-left:auto;">Cancelar</button>
+        <button id="modalShipConfirmBtn" type="button" class="btn btn-primary btn-sm">Marcar como enviado</button>
+      </div>
+      <div class="admin-form-error" id="modalShipError"></div>
     </div>
     <div class="modal-foot">
       <label for="modalStatusSelect">Estado del pedido</label>

@@ -6,6 +6,10 @@
 // api/admin/orders.js al registrar a mano un pedido de WhatsApp (channel
 // 'whatsapp'), que puede estar ya pagado o pendiente de pago.
 //
+// Además: el aviso de despacho con transportadora y guía (al pasar un pedido
+// a "Enviado" en api/admin/orders.js) y el recordatorio de carrito abandonado
+// (api/_lib/abandoned-carts.js).
+//
 // Variables de entorno requeridas (ver .env.example):
 //   RESEND_API_KEY      -- API key de Resend (re_...)
 //   ORDER_FROM_EMAIL     -- remitente verificado en Resend, ej. pedidos@coffeearu.com
@@ -53,12 +57,13 @@ function formatCOP(n) {
   return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 }
 
+// Devuelve true si Resend aceptó el correo.
 async function sendEmail({ to, subject, html }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ORDER_FROM_EMAIL;
   if (!apiKey || !from) {
     console.warn('Notificaciones de pedido desactivadas: falta RESEND_API_KEY o ORDER_FROM_EMAIL.');
-    return;
+    return false;
   }
   const res = await fetch(RESEND_API_URL, {
     method: 'POST',
@@ -72,6 +77,7 @@ async function sendEmail({ to, subject, html }) {
     const body = await res.text().catch(() => '');
     console.error(`Resend respondió ${res.status} al enviar a ${to}: ${body}`);
   }
+  return res.ok;
 }
 
 function itemsRowsHtml(items) {
@@ -276,4 +282,99 @@ async function sendCustomerOrderConfirmation(order, items) {
   });
 }
 
-module.exports = { sendAdminOrderNotification, sendCustomerOrderConfirmation };
+function buttonHtml(href, label) {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px auto 4px;">
+      <tr>
+        <td style="background-color:${BRAND.red};border-radius:999px;">
+          <a href="${esc(href)}" style="display:inline-block;padding:14px 30px;font-family:'Inter',Arial,sans-serif;font-size:15px;font-weight:700;color:${BRAND.white};text-decoration:none;">${label}</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// Recordatorio de carrito abandonado (ver api/_lib/abandoned-carts.js).
+// "lines" son las líneas del carrito con precios actuales de la BD.
+async function sendAbandonedCartReminder(cart, lines, recoverUrl) {
+  const firstName = String(cart.customer_name || '').trim().split(/\s+/)[0];
+
+  const bodyHtml = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      ${itemsRowsHtml(lines)}
+    </table>
+    ${buttonHtml(recoverUrl, 'Retomar mi pedido')}
+    <p style="margin:10px 0 0;text-align:center;font-family:'Inter',Arial,sans-serif;font-size:12px;color:${BRAND.textSoft};">
+      Tu carrito te espera tal como lo dejaste.
+    </p>
+  `;
+
+  const html = shellHtml({
+    preheader: 'Dejaste café en tu carrito, ¿todo bien?',
+    badge: 'Tu carrito te espera',
+    heading: `${firstName ? `${esc(firstName)}, ¿` : '¿'}tuviste algún problema?`,
+    intro: 'Vimos que empezaste un pedido en Café Arú pero no alcanzaste a terminarlo. Si algo falló con el pago o tienes alguna duda, cuéntanos y te ayudamos. Y si solo te distrajiste, aquí está tu carrito para que lo retomes en un clic:',
+    bodyHtml,
+    footerNote: '¿Algo no funcionó? Responde a este correo o escríbenos por WhatsApp al +57 313 283 4162 y lo resolvemos contigo.',
+  });
+
+  return sendEmail({
+    to: [cart.email],
+    subject: '¿Tuviste algún problema con tu pedido? — Café Arú',
+    html,
+  });
+}
+
+// Aviso al cliente cuando el pedido pasa a "Enviado" desde el backoffice.
+async function sendOrderShippedNotification(order, items) {
+  if (!order.customer_email) return false;
+
+  const rowStyle = `padding:4px 0;font-family:'Inter',Arial,sans-serif;font-size:14px;color:${BRAND.text};`;
+  const bodyHtml = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${BRAND.cream};border-radius:10px;margin-bottom:22px;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <p style="margin:0 0 8px;font-family:'Inter',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND.textSoft};">Datos del envío</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="${rowStyle}"><strong>Transportadora:</strong> ${esc(order.shipping_carrier)}</td></tr>
+            <tr><td style="${rowStyle}"><strong>Número de guía:</strong> <span style="font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:${BRAND.black};">${esc(order.tracking_number)}</span></td></tr>
+            ${order.customer_address ? `<tr><td style="${rowStyle}"><strong>Dirección:</strong> ${esc(order.customer_address)}</td></tr>` : ''}
+          </table>
+          ${order.tracking_url ? `
+          ${buttonHtml(order.tracking_url, 'Rastrear mi pedido')}
+          <p style="margin:8px 0 0;text-align:center;font-family:'Inter',Arial,sans-serif;font-size:12px;line-height:1.5;color:${BRAND.textSoft};">
+            En la página de ${esc(order.shipping_carrier)} ingresa el número de guía <strong>${esc(order.tracking_number)}</strong> si no aparece automáticamente.
+          </p>` : `
+          <p style="margin:12px 0 0;font-family:'Inter',Arial,sans-serif;font-size:13px;line-height:1.5;color:${BRAND.textSoft};">
+            Puedes rastrearlo en la página web de ${esc(order.shipping_carrier)} con el número de guía.
+          </p>`}
+        </td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      ${itemsRowsHtml(items)}
+    </table>
+  `;
+
+  const html = shellHtml({
+    preheader: `Tu pedido ${order.reference} va en camino — guía ${order.tracking_number}`,
+    badge: 'Pedido despachado',
+    heading: '¡Tu café va en camino! 🚚',
+    intro: `Tu pedido <strong>${esc(order.reference)}</strong> ya fue despachado. Estos son los datos para que le sigas la pista:`,
+    bodyHtml,
+    footerNote: 'Si tienes algún inconveniente con la entrega, responde a este correo y te ayudamos con la transportadora.',
+  });
+
+  return sendEmail({
+    to: [order.customer_email],
+    subject: `Tu pedido va en camino — Café Arú (${order.reference})`,
+    html,
+  });
+}
+
+module.exports = {
+  sendAdminOrderNotification,
+  sendCustomerOrderConfirmation,
+  sendAbandonedCartReminder,
+  sendOrderShippedNotification,
+  SITE_URL,
+};

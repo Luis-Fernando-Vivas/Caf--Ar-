@@ -453,6 +453,20 @@ function renderOrders(orders){
   });
 }
 
+// Transportadoras para el despacho. La URL es la página de rastreo de cada una
+// (el cliente ingresa la guía ahí); se puede reemplazar por un link directo
+// desde el formulario.
+const CARRIERS = [
+  { name: 'Servientrega', url: 'https://www.servientrega.com/wps/portal/rastreo-envio' },
+  { name: 'Interrapidísimo', url: 'https://www.interrapidisimo.com/sigue-tu-envio/' },
+  { name: 'Coordinadora', url: 'https://coordinadora.com/rastreo/rastreo-de-guia/' },
+  { name: 'Envía', url: 'https://envia.co/' },
+  { name: 'TCC', url: 'https://tcc.com.co/courier/mensajeria/rastrear-envio/' },
+  { name: 'Deprisa', url: 'https://www.deprisa.com/Tracking/' },
+  { name: '4-72', url: 'https://www.4-72.com.co/' },
+];
+const OTHER_CARRIER = '__other__';
+
 async function updateStatus(id, status, selectEl){
   selectEl.disabled = true;
   try {
@@ -545,7 +559,41 @@ function openOrderModal(o){
     if (s === o.status) opt.selected = true;
     statusSelect.appendChild(opt);
   });
-  statusSelect.onchange = () => updateStatus(o.id, statusSelect.value, statusSelect);
+  // "Enviado" no se guarda directo: primero se piden transportadora y guía.
+  statusSelect.onchange = () => {
+    if (statusSelect.value === 'shipped') {
+      openShipPanel(o);
+      return;
+    }
+    closeShipPanel();
+    updateStatus(o.id, statusSelect.value, statusSelect);
+  };
+
+  const shipInfoSection = document.getElementById('modalShipInfoSection');
+  const shipInfo = document.getElementById('modalShipInfo');
+  shipInfo.innerHTML = '';
+  shipInfoSection.hidden = !o.tracking_number && o.status !== 'shipped';
+  if (o.tracking_number) {
+    [
+      ['Transportadora', o.shipping_carrier],
+      ['Guía', o.tracking_number],
+      ['Rastreo', o.tracking_url],
+      ['Correo al cliente', o.shipped_notified_at ? 'Enviado el ' + new Date(o.shipped_notified_at).toLocaleString('es-CO') : 'No enviado'],
+    ].forEach(([label, value]) => {
+      const dt = document.createElement('dt'); dt.textContent = label;
+      const dd = document.createElement('dd');
+      if (label === 'Rastreo' && value) {
+        const a = document.createElement('a');
+        a.href = value; a.target = '_blank'; a.rel = 'noopener'; a.textContent = value;
+        dd.appendChild(a);
+      } else {
+        dd.textContent = value || '—';
+      }
+      shipInfo.append(dt, dd);
+    });
+  }
+  document.getElementById('modalShipEditBtn').onclick = () => openShipPanel(o);
+  closeShipPanel();
 
   // Lo que de verdad le cobró la transportadora (distinto de lo que pagó el
   // cliente por el envío). Alimenta el reporte de /admin/reports.
@@ -577,6 +625,108 @@ function openOrderModal(o){
 
 function closeOrderModal(){
   document.getElementById('orderModalOverlay').hidden = true;
+}
+
+/* ---------------- despacho: transportadora + guía ---------------- */
+function openShipPanel(o){
+  const panel = document.getElementById('modalShipPanel');
+  const carrierSelect = document.getElementById('modalCarrier');
+  const otherField = document.getElementById('modalCarrierOtherField');
+  const otherInput = document.getElementById('modalCarrierOther');
+  const numberInput = document.getElementById('modalTrackingNumber');
+  const urlInput = document.getElementById('modalTrackingUrl');
+  const emailCheck = document.getElementById('modalShipEmail');
+  const errorEl = document.getElementById('modalShipError');
+  const confirmBtn = document.getElementById('modalShipConfirmBtn');
+  const statusSelect = document.getElementById('modalStatusSelect');
+
+  carrierSelect.innerHTML = '';
+  [...CARRIERS, { name: 'Otra', value: OTHER_CARRIER }].forEach((c) => {
+    const opt = document.createElement('option');
+    opt.value = c.value || c.name;
+    opt.textContent = c.name;
+    carrierSelect.appendChild(opt);
+  });
+
+  const known = CARRIERS.find((c) => c.name === o.shipping_carrier);
+  carrierSelect.value = known ? known.name : (o.shipping_carrier ? OTHER_CARRIER : CARRIERS[0].name);
+  otherInput.value = known ? '' : (o.shipping_carrier || '');
+  numberInput.value = o.tracking_number || '';
+  urlInput.value = o.tracking_url || (known || CARRIERS[0]).url;
+  otherField.hidden = carrierSelect.value !== OTHER_CARRIER;
+  errorEl.textContent = '';
+
+  carrierSelect.onchange = () => {
+    const carrier = CARRIERS.find((c) => c.name === carrierSelect.value);
+    otherField.hidden = !!carrier;
+    urlInput.value = carrier ? carrier.url : '';
+    if (!carrier) otherInput.focus();
+  };
+
+  emailCheck.checked = !!o.customer_email;
+  emailCheck.disabled = !o.customer_email;
+  document.getElementById('modalShipNoEmail').hidden = !!o.customer_email;
+  confirmBtn.textContent = o.status === 'shipped' ? 'Guardar guía' : 'Marcar como enviado';
+
+  document.getElementById('modalShipCancelBtn').onclick = () => {
+    statusSelect.value = o.status;
+    closeShipPanel();
+  };
+
+  confirmBtn.onclick = async () => {
+    const carrierName = carrierSelect.value === OTHER_CARRIER ? otherInput.value.trim() : carrierSelect.value;
+    const trackingNumber = numberInput.value.trim();
+    if (!carrierName || !trackingNumber) {
+      errorEl.textContent = 'Indica la transportadora y el número de guía.';
+      return;
+    }
+    confirmBtn.disabled = true;
+    statusSelect.disabled = true;
+    errorEl.textContent = '';
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: o.id,
+          status: 'shipped',
+          shipping_carrier: carrierName,
+          tracking_number: trackingNumber,
+          tracking_url: urlInput.value.trim(),
+          send_email: emailCheck.checked,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errorEl.textContent = data.message || 'No se pudo guardar el despacho.';
+        return;
+      }
+      Object.assign(o, {
+        status: 'shipped',
+        shipping_carrier: carrierName,
+        tracking_number: trackingNumber,
+        tracking_url: urlInput.value.trim() || null,
+      });
+      if (data.emailed) o.shipped_notified_at = new Date().toISOString();
+      if (emailCheck.checked && !data.emailed) {
+        alert('El pedido quedó como enviado, pero el correo al cliente no se pudo enviar. Revisa la configuración de Resend.');
+      }
+      openOrderModal(o);
+      loadOrders();
+    } catch {
+      errorEl.textContent = 'No se pudo conectar con el servidor.';
+    } finally {
+      confirmBtn.disabled = false;
+      statusSelect.disabled = false;
+    }
+  };
+
+  panel.hidden = false;
+  (o.tracking_number ? numberInput : carrierSelect).focus();
+}
+
+function closeShipPanel(){
+  document.getElementById('modalShipPanel').hidden = true;
 }
 
 function initOrderModal(){

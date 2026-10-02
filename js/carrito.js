@@ -19,6 +19,78 @@ function formatCOP(n) {
   return Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/* ---------- carrito abandonado ----------
+   En cuanto el cliente escribe un correo válido, el carrito se guarda en el
+   servidor (y se actualiza con cada cambio). Si no termina la compra, le llega
+   un correo con un link /carrito?recuperar=<token> -- ver api/_lib/abandoned-carts.js. */
+
+let saveCartTimer = null;
+
+function scheduleSaveCart() {
+  clearTimeout(saveCartTimer);
+  saveCartTimer = setTimeout(saveCartRemote, 800);
+}
+
+async function saveCartRemote() {
+  const email = document.getElementById('customerEmail').value.trim();
+  const items = Cart.getItems();
+  if (!EMAIL_RE.test(email) || !items.length) return;
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save_cart',
+        cart_token: Cart.getToken() || undefined,
+        email,
+        items: items.map((it) => ({ product_id: it.product_id, quantity: it.quantity, variant: it.variant })),
+        customer_name: document.getElementById('customerName').value.trim(),
+        customer_phone: document.getElementById('customerPhone').value.trim(),
+        customer_address: document.getElementById('customerAddress').value.trim(),
+        shipping_rate_id: selectedShippingId,
+        coupon_code: appliedCoupon || undefined,
+      }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.cart_token) Cart.setToken(data.cart_token);
+  } catch {
+    // Silencioso: guardar el carrito es un extra, nunca debe estorbar la compra.
+  }
+}
+
+// Si el cliente llega desde el link del correo, vuelve a llenar el carrito y
+// el formulario tal como los dejó.
+async function recoverCartFromLink() {
+  const params = new URLSearchParams(location.search);
+  const token = params.get('recuperar');
+  if (!token) return;
+  params.delete('recuperar');
+  history.replaceState(null, '', location.pathname + (params.toString() ? `?${params}` : ''));
+
+  try {
+    const res = await fetch(`/api/checkout?recuperar=${encodeURIComponent(token)}`);
+    if (!res.ok) return;
+    const cart = await res.json();
+    Cart.setToken(cart.token);
+    if (cart.items && cart.items.length) Cart.replace(cart.items);
+    const fill = (id, value) => { if (value) document.getElementById(id).value = value; };
+    fill('customerEmail', cart.email);
+    fill('customerName', cart.customer_name);
+    fill('customerPhone', cart.customer_phone);
+    fill('customerAddress', cart.customer_address);
+    if (cart.shipping_rate_id) selectedShippingId = cart.shipping_rate_id;
+    if (cart.coupon_code) {
+      appliedCoupon = cart.coupon_code;
+      document.getElementById('couponInput').value = cart.coupon_code;
+    }
+  } catch {
+    // Si falla, el cliente igual puede armar el carrito de nuevo.
+  }
+}
+
 function renderLines() {
   const items = Cart.getItems();
   const wrap = document.getElementById('cartLines');
@@ -95,7 +167,10 @@ async function loadShippingRates() {
   if (!res.ok) return;
   const data = await res.json();
   shippingRates = data.rates || [];
-  if (!selectedShippingId && shippingRates.length) selectedShippingId = shippingRates[0].id;
+  // (la tarifa de un carrito recuperado pudo haberse desactivado desde entonces)
+  if (!shippingRates.some((r) => r.id === selectedShippingId)) {
+    selectedShippingId = shippingRates.length ? shippingRates[0].id : null;
+  }
 
   renderShippingOptions();
 }
@@ -111,7 +186,7 @@ function renderShippingOptions() {
     radio.name = 'shipping';
     radio.value = r.id;
     radio.checked = r.id === selectedShippingId;
-    radio.addEventListener('change', () => { selectedShippingId = r.id; refreshTotals(); });
+    radio.addEventListener('change', () => { selectedShippingId = r.id; refreshTotals(); scheduleSaveCart(); });
     const span = document.createElement('span');
     span.textContent = r.name;
     const amount = document.createElement('strong');
@@ -238,6 +313,7 @@ async function applyCoupon() {
   const input = document.getElementById('couponInput');
   appliedCoupon = input.value.trim();
   await refreshTotals();
+  scheduleSaveCart();
 }
 
 async function checkout(channel) {
@@ -249,8 +325,13 @@ async function checkout(channel) {
   const customerName = document.getElementById('customerName').value.trim();
   const customerAddress = document.getElementById('customerAddress').value.trim();
   const customerPhone = document.getElementById('customerPhone').value.trim();
-  if (!customerName || !customerAddress || !customerPhone) {
-    errorEl.textContent = 'Completa nombre, dirección y teléfono para poder enviarte el pedido.';
+  const customerEmail = document.getElementById('customerEmail').value.trim();
+  if (!customerName || !customerEmail || !customerAddress || !customerPhone) {
+    errorEl.textContent = 'Completa nombre, correo, dirección y teléfono para poder enviarte el pedido.';
+    return;
+  }
+  if (!EMAIL_RE.test(customerEmail)) {
+    errorEl.textContent = 'Revisa tu correo electrónico, parece que no está bien escrito.';
     return;
   }
 
@@ -268,6 +349,11 @@ async function checkout(channel) {
   waBtn.disabled = true;
 
   try {
+    // Asegura que el carrito quede guardado (y con token) antes de crear el
+    // pedido: si el pago de Wompi no se completa, así sí le llega el recordatorio.
+    clearTimeout(saveCartTimer);
+    await saveCartRemote();
+
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -279,6 +365,8 @@ async function checkout(channel) {
         customer_name: customerName,
         customer_address: customerAddress,
         customer_phone: customerPhone,
+        customer_email: customerEmail,
+        cart_token: Cart.getToken() || undefined,
       }),
     });
     const data = await res.json();
@@ -296,6 +384,7 @@ async function checkout(channel) {
         reference: data.reference,
         'signature:integrity': data.signature,
         'redirect-url': redirectUrl,
+        'customer-data:email': customerEmail,
       });
       if (window.Analytics) {
         Analytics.savePendingPurchase({
@@ -326,6 +415,7 @@ async function checkout(channel) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await recoverCartFromLink();
   renderLines();
   if (window.Analytics && Cart.getCount() > 0) {
     Analytics.ecommerce('view_cart', Analytics.cartItems(Cart.getItems()), Cart.getSubtotal());
@@ -336,6 +426,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('cart:change', () => {
     renderLines();
     refreshTotals();
+    scheduleSaveCart();
+  });
+  ['customerEmail', 'customerName', 'customerPhone', 'customerAddress'].forEach((id) => {
+    document.getElementById(id).addEventListener('change', scheduleSaveCart);
   });
 
   document.getElementById('applyCouponBtn').addEventListener('click', applyCoupon);

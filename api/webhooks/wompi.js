@@ -102,16 +102,16 @@ module.exports = async (req, res) => {
         newStatus = 'amount_mismatch';
       }
 
-      // El nombre/dirección/teléfono que el cliente escribió en nuestro propio
-      // formulario de carrito.html es más confiable que lo que reporte Wompi
-      // (algunos métodos de pago se saltan esos campos) -- por eso aquí el dato
-      // ya guardado en el pedido tiene prioridad, y el de Wompi solo se usa si
-      // faltaba. El email sí solo lo tenemos por Wompi, así que ahí manda él.
+      // El nombre/correo/dirección/teléfono que el cliente escribió en nuestro
+      // propio formulario de carrito.html es más confiable que lo que reporte
+      // Wompi (algunos métodos de pago se saltan esos campos) -- por eso aquí
+      // el dato ya guardado en el pedido tiene prioridad, y el de Wompi solo se
+      // usa si faltaba (pedidos anteriores a que el carrito pidiera el correo).
       await sql`
         UPDATE orders
         SET status = ${newStatus},
             wompi_transaction_id = ${tx.id || null},
-            customer_email = COALESCE(${customerEmail}, customer_email),
+            customer_email = COALESCE(customer_email, ${customerEmail}),
             customer_name = COALESCE(customer_name, ${customerName}),
             customer_phone = COALESCE(customer_phone, ${customerPhone}),
             customer_address = COALESCE(customer_address, ${customerAddress}),

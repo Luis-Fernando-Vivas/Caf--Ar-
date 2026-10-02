@@ -4,6 +4,10 @@
    datos, así que un precio desactualizado en localStorage nunca afecta el cobro. */
 
 const CART_STORAGE_KEY = 'aru_cart';
+// Token del carrito guardado en el servidor (para el correo de carrito
+// abandonado) -- ver js/carrito.js. Se descarta al vaciar el carrito, así un
+// carrito nuevo después de comprar no hereda el anterior.
+const CART_TOKEN_KEY = 'aru_cart_token';
 
 function cartRead() {
   try {
@@ -76,7 +80,21 @@ const Cart = {
   },
 
   clear() {
+    try { localStorage.removeItem(CART_TOKEN_KEY); } catch {}
     cartWrite([]);
+  },
+
+  // Reemplaza todo el carrito (al recuperarlo desde el link del correo).
+  replace(items) {
+    cartWrite(items);
+  },
+
+  getToken() {
+    try { return localStorage.getItem(CART_TOKEN_KEY) || ''; } catch { return ''; }
+  },
+
+  setToken(token) {
+    try { localStorage.setItem(CART_TOKEN_KEY, token); } catch {}
   },
 
   // Aviso flotante tras "Añadir al carrito", con botón para ir al carrito.

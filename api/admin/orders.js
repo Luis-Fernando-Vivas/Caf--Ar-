@@ -16,6 +16,10 @@
 // con los mismos totales que el carrito, y envía los correos de notificación
 // al negocio y al cliente igual que el webhook de Wompi con un pago aprobado.
 //
+// PATCH { id, status:'shipped', shipping_carrier, tracking_number, tracking_url, send_email }
+// marca el pedido como enviado guardando transportadora y guía, y (salvo
+// send_email:false) le manda al cliente el correo de "tu pedido va en camino".
+//
 // Reporte de ingresos y costos (/admin/reports) -- lógica en api/_lib/reports.js:
 //   GET ?view=report&from=YYYY-MM-DD&to=YYYY-MM-DD   pedidos pagados + gastos
 //   PATCH { id, shipping_cost_cop }                   costo real del envío
@@ -28,7 +32,9 @@ const { isAuthenticated } = require('../_lib/auth');
 const { sql, ensureSchema, isConfigured } = require('../_lib/db');
 const { computeTotals, createOrder, CheckoutError } = require('../_lib/checkout');
 const { getWompiEnvironment, getWompiKeys } = require('../_lib/wompi-env');
-const { sendAdminOrderNotification, sendCustomerOrderConfirmation } = require('../_lib/notify');
+const {
+  sendAdminOrderNotification, sendCustomerOrderConfirmation, sendOrderShippedNotification,
+} = require('../_lib/notify');
 const { getReportData, createExpense, deleteExpense, setShippingCost, setWompiFee, ReportError } = require('../_lib/reports');
 
 const ALLOWED_STATUSES = [
@@ -258,6 +264,47 @@ async function createManualOrder(body, res) {
   res.status(201).json({ id: order.id, reference: order.reference, status, emailed });
 }
 
+async function markShipped(id, body, res) {
+  const carrier = String(body.shipping_carrier || '').trim().slice(0, 80);
+  const trackingNumber = String(body.tracking_number || '').trim().slice(0, 80);
+  const trackingUrl = String(body.tracking_url || '').trim().slice(0, 500);
+  if (!carrier || !trackingNumber) {
+    res.status(400).json({ error: 'missing_tracking', message: 'Indica la transportadora y el número de guía.' });
+    return;
+  }
+  if (trackingUrl && !/^https?:\/\/\S+$/i.test(trackingUrl)) {
+    res.status(400).json({ error: 'invalid_tracking_url', message: 'El link de rastreo debe empezar por http:// o https://.' });
+    return;
+  }
+
+  const rows = await sql`
+    UPDATE orders
+    SET status = 'shipped', shipping_carrier = ${carrier}, tracking_number = ${trackingNumber},
+        tracking_url = ${trackingUrl || null}, updated_at = now()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  if (!rows.length) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  const order = rows[0];
+
+  // Se espera antes de responder: la función serverless se congela al responder.
+  let emailed = false;
+  if (body.send_email !== false && order.customer_email) {
+    const items = await sql`SELECT * FROM order_items WHERE order_id = ${order.id}`;
+    try {
+      emailed = await sendOrderShippedNotification(order, items);
+      if (emailed) await sql`UPDATE orders SET shipped_notified_at = now() WHERE id = ${order.id}`;
+    } catch (err) {
+      console.error('Error enviando aviso de despacho al cliente:', err);
+    }
+  }
+
+  res.status(200).json({ ok: true, emailed });
+}
+
 module.exports = async (req, res) => {
   if (!isAuthenticated(req)) {
     res.status(401).json({ error: 'unauthorized' });
@@ -289,6 +336,7 @@ module.exports = async (req, res) => {
                wompi_transaction_id, environment, shipping_name, shipping_cop,
                coupon_code, discount_cop, subtotal_cop, customer_name, customer_email,
                customer_phone, customer_address, payment_url, shipping_cost_cop,
+               shipping_carrier, tracking_number, tracking_url, shipped_notified_at,
                created_at, updated_at
         FROM orders
         ORDER BY created_at DESC
@@ -345,6 +393,11 @@ module.exports = async (req, res) => {
       const status = String(body.status || '');
       if (!id || !ALLOWED_STATUSES.includes(status)) {
         res.status(400).json({ error: 'invalid_input' });
+        return;
+      }
+
+      if (status === 'shipped') {
+        await markShipped(id, body, res);
         return;
       }
 

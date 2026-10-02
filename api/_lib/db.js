@@ -24,7 +24,7 @@ let schemaReady = null;
 // el guardado en `settings`, ensureSchema se resuelve con UNA sola consulta en
 // vez de ~30 viajes secuenciales a Neon (lo que hacía lenta la primera carga
 // de la tienda en cada arranque en frío de la función).
-const SCHEMA_VERSION = '5';
+const SCHEMA_VERSION = '6';
 
 async function schemaIsCurrent() {
   try {
@@ -164,6 +164,33 @@ function ensureSchema() {
         );
       `;
       await sql`CREATE INDEX IF NOT EXISTS expenses_spent_on ON expenses (spent_on);`;
+      // Despacho (/admin): transportadora y guía con las que salió el pedido,
+      // y cuándo se le avisó al cliente por correo.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_carrier TEXT;`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url TEXT;`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_notified_at TIMESTAMPTZ;`;
+      // Carritos con correo (carrito.html) para el recordatorio de carrito
+      // abandonado -- ver api/_lib/abandoned-carts.js. "token" va en el link
+      // de recuperación que recibe el cliente.
+      await sql`
+        CREATE TABLE IF NOT EXISTS carts (
+          id SERIAL PRIMARY KEY,
+          token TEXT UNIQUE NOT NULL,
+          email TEXT NOT NULL,
+          customer_name TEXT,
+          customer_phone TEXT,
+          customer_address TEXT,
+          items JSONB NOT NULL DEFAULT '[]',
+          shipping_rate_id INTEGER,
+          coupon_code TEXT,
+          order_reference TEXT,
+          reminder_sent_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS carts_pending_reminder ON carts (updated_at) WHERE reminder_sent_at IS NULL;`;
       // Límite de peticiones por IP (login, pedidos, reseñas, cupones) -- ver
       // api/_lib/rate-limit.js. Reemplaza a la tabla login_attempts de la v2.
       await sql`

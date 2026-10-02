@@ -1,6 +1,9 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "crons": [
+    { "path": "/api/checkout?task=abandoned-carts", "schedule": "0 15 * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
