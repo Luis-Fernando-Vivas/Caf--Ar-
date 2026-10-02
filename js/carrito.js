@@ -428,6 +428,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshTotals();
     scheduleSaveCart();
   });
+  // "?" del correo: en celular no hay hover, así que también abre/cierra al tocar.
+  document.querySelectorAll('.cart-input-help').forEach((wrap) => {
+    const btn = wrap.querySelector('.cart-help-btn');
+    const setOpen = (open) => {
+      wrap.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', String(open));
+    };
+    btn.addEventListener('click', () => setOpen(!wrap.classList.contains('is-open')));
+    document.addEventListener('click', (evt) => { if (!wrap.contains(evt.target)) setOpen(false); });
+    btn.addEventListener('keydown', (evt) => { if (evt.key === 'Escape') setOpen(false); });
+  });
+
   ['customerEmail', 'customerName', 'customerPhone', 'customerAddress'].forEach((id) => {
     document.getElementById(id).addEventListener('change', scheduleSaveCart);
   });

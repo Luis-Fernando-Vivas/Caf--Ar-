@@ -106,8 +106,11 @@
         <div class="cart-shipping-form" id="shippingForm">
           <h4>Datos de envío</h4>
           <input id="customerName" placeholder="Nombre completo" autocomplete="name">
-          <input id="customerEmail" placeholder="Correo electrónico" type="email" autocomplete="email" inputmode="email">
-          <span class="cart-form-hint">Te enviaremos la confirmación y el seguimiento de tu pedido a este correo.</span>
+          <div class="cart-input-help">
+            <input id="customerEmail" placeholder="Correo electrónico" type="email" autocomplete="email" inputmode="email">
+            <button type="button" class="cart-help-btn" aria-label="¿Para qué pedimos el correo?" aria-describedby="emailHelpTip" aria-expanded="false">?</button>
+            <span id="emailHelpTip" class="cart-help-tip" role="tooltip">Te enviaremos la confirmación y el seguimiento de tu pedido a este correo.</span>
+          </div>
           <input id="customerAddress" placeholder="Dirección de envío (calle, número, ciudad)" autocomplete="street-address">
           <input id="customerPhone" placeholder="Teléfono de contacto" type="tel" autocomplete="tel">
         </div>
