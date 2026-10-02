@@ -319,6 +319,10 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-w
   background:var(--c-cream); color:var(--c-text);
 }
 
+.modal-foot .modal-cost-input, .report-cost-input{
+  width:8.5rem; padding:.5em .8em; border-radius:8px; border:1px solid rgba(36,27,18,.18); font-family:inherit;
+  font-size:.86rem; background:var(--c-cream); color:var(--c-text);
+}
 .modal-foot .admin-check{ display:inline-flex; align-items:center; gap:.45em; font-weight:500; color:var(--c-text); cursor:pointer; }
 .modal-foot .admin-check input{ accent-color:var(--c-red); width:1rem; height:1rem; }
 
@@ -357,3 +361,119 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-w
   flex:1 1 260px; min-width:0; padding:.55em .8em; border-radius:8px; border:1px solid rgba(36,27,18,.18);
   font-family:inherit; font-size:.82rem; background:var(--c-white); color:var(--c-text);
 }
+
+/* ---------- reportes de ingresos y costos ---------- */
+.admin-check{ display:inline-flex; align-items:center; gap:.45em; font-size:.82rem; color:var(--c-text); cursor:pointer; }
+.admin-check input{ accent-color:var(--c-red); width:1rem; height:1rem; }
+.report-title{ font-family:var(--font-display); font-size:1.05rem; color:var(--c-black); margin:0 0 1rem; }
+.report-stat-sub{ display:block; margin-top:.45rem; font-size:.76rem; color:var(--c-text-soft); }
+.report-stat-sub.is-negative, .report-table .is-negative, .admin-stat-card strong.is-negative{ color:var(--c-red); }
+.report-warning{
+  margin-bottom:1.4rem; padding:.85rem 1.1rem; border-radius:12px; font-size:.86rem;
+  background:rgba(255,205,53,.2); color:var(--c-kraft-dark);
+}
+.report-warning[hidden]{ display:none; }
+.report-table td.num, .report-table th.num{ text-align:right; }
+.report-table tfoot td{
+  font-weight:700; color:var(--c-black); border-top:2px solid var(--c-black); background:var(--c-cream);
+  padding-top:.7rem; padding-bottom:.7rem;
+}
+.report-table .cost-missing{ border-color:var(--c-kraft-dark); background:rgba(255,205,53,.15); }
+.report-table .cost-saved{ font-size:.72rem; color:#00875f; margin-left:.4em; }
+
+/* Impresión / PDF del reporte: hoja horizontal y tablas que se ajustan al
+   ancho de la página (en pantalla tienen scroll horizontal, en papel no). */
+.print-only{ display:none; }
+@media print{
+  @page{ size:A4 landscape; margin:10mm; }
+  html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .admin-sidebar, .admin-topbar-actions, .report-filters, .no-print, .report-warning{ display:none !important; }
+  .print-only{ display:inline; }
+  p.print-only{ display:block; }
+  .admin-shell, .admin-content, .admin-main{ display:block; margin:0; padding:0; min-height:0; }
+  .admin-topbar{ position:static; padding:0 0 .6rem; border:none; background:none; }
+  .admin-body{ background:#fff; }
+  .admin-panel{ border-color:#ccc; overflow:visible; margin-bottom:.8rem; }
+  .admin-panel-head{ padding:.5rem .7rem; }
+  .admin-table-wrap{ overflow:visible; }
+  table.admin-table{ min-width:0; width:100%; table-layout:auto; font-size:8pt; }
+  .admin-table th, .admin-table td{ padding:.25rem .35rem; white-space:normal; }
+  .admin-table td.cell-ref{ word-break:break-all; }
+  .report-day.is-empty{ display:none; }
+  .admin-table thead{ display:table-header-group; }
+  .admin-table tr{ break-inside:avoid; }
+  .admin-table td.cell-ref{ font-size:7pt; }
+  .status-badge{ padding:.1em .4em; font-size:7pt; }
+  .admin-stats, .admin-stats.report-stats{ grid-template-columns:repeat(6,1fr); gap:.4rem; margin-bottom:.8rem; }
+  .admin-stat-card{ padding:.5rem .6rem; break-inside:avoid; }
+  .admin-stat-card strong{ font-size:12pt; }
+  .report-cost-input{ display:none; }
+}
+
+/* vista "día a día" del reporte */
+.report-days-hint{ margin:0; padding:.9rem 1.5rem 0; font-size:.82rem; color:var(--c-text-soft); }
+.report-days{ display:flex; flex-direction:column; gap:.7rem; padding:1rem 1.5rem 1.4rem; }
+.report-day{ border:1px solid rgba(36,27,18,.1); border-radius:12px; background:var(--c-white); overflow:hidden; }
+.report-day[open]{ border-color:var(--c-kraft); box-shadow:0 6px 18px -12px rgba(23,17,12,.35); }
+.report-day > summary{
+  list-style:none; cursor:pointer; display:flex; align-items:center; flex-wrap:wrap; gap:.4rem 1rem;
+  padding:.85rem 1.1rem; background:var(--c-cream);
+}
+.report-day > summary::-webkit-details-marker{ display:none; }
+.report-day > summary::before{ content:"▸"; color:var(--c-text-soft); transition:transform .15s; }
+.report-day[open] > summary::before{ transform:rotate(90deg); }
+.report-day > summary:hover{ background:var(--c-cream-2, #f1e6cd); }
+.report-day-date{ font-family:var(--font-display); font-weight:600; color:var(--c-black); min-width:14rem; }
+.report-day-metrics{ display:flex; flex-wrap:wrap; gap:.3rem 1rem; font-size:.82rem; color:var(--c-text-soft); }
+.report-day-metrics strong{ color:var(--c-black); }
+.report-day-metrics strong.is-negative{ color:var(--c-red); }
+.report-day-warn{
+  margin-left:auto; font-size:.72rem; font-weight:600; padding:.25em .7em; border-radius:100px;
+  background:rgba(255,205,53,.25); color:var(--c-kraft-dark);
+}
+.report-day-body{ padding:1rem 1.1rem 1.2rem; }
+.report-day-body h4{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--c-text-soft); margin:0 0 .6rem;
+}
+.report-day-body h4:not(:first-child){ margin-top:1.3rem; }
+.report-day-body .admin-table th, .report-day-body .admin-table td{ padding:.5rem .8rem; }
+.report-day-empty{ margin:0; font-size:.85rem; color:var(--c-text-soft); }
+.report-expense-row{
+  display:grid; grid-template-columns:9.5rem minmax(0,1fr) auto 2rem; gap:.8rem; align-items:center;
+  padding:.45rem 0; border-bottom:1px solid rgba(36,27,18,.06); font-size:.86rem;
+}
+.report-expense-note{ color:var(--c-text-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.report-expense-row .line-remove{
+  border:none; background:var(--c-cream); color:var(--c-text-soft); width:2rem; height:2rem; border-radius:100px;
+  font-size:1.1rem; line-height:1; cursor:pointer;
+}
+.report-expense-row .line-remove:hover{ color:var(--c-red); }
+.report-expense-form{
+  display:grid; grid-template-columns:11rem 9rem minmax(0,1fr) auto; gap:.6rem; align-items:center; margin-top:.8rem;
+}
+.report-expense-form select, .report-expense-form input{
+  padding:.55em .8em; border-radius:8px; border:1px solid rgba(36,27,18,.18); font-family:inherit;
+  font-size:.86rem; background:var(--c-cream); color:var(--c-text); min-width:0;
+}
+.report-expense-form .admin-form-error{ grid-column:1 / -1; margin:0; min-height:0; }
+@media (max-width:760px){
+  .report-expense-form{ grid-template-columns:1fr 1fr; }
+  .report-expense-form input[type="text"]{ grid-column:1 / -1; }
+  .report-expense-row{ grid-template-columns:minmax(0,1fr) auto 2rem; }
+  .report-expense-note{ display:none; }
+  .report-day-warn{ margin-left:0; }
+}
+@media print{
+  .report-days{ padding:.5rem .7rem; gap:.5rem; }
+  .report-day{ box-shadow:none; }
+  .report-day > summary{ padding:.45rem .6rem; break-after:avoid; }
+  .report-day > summary::before{ display:none; }
+  .report-day-body{ padding:.5rem .6rem; }
+  .report-day-metrics{ font-size:8pt; }
+  .report-expense-row{ grid-template-columns:9rem minmax(0,1fr) auto; font-size:8pt; padding:.2rem 0; }
+  .report-expense-note{ display:block; white-space:normal; }
+}
+.admin-stats.report-stats{ grid-template-columns:repeat(6,1fr); }
+@media (max-width:1100px){ .admin-stats.report-stats{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:640px){ .admin-stats.report-stats{ grid-template-columns:repeat(2,1fr); } }
+.report-table .report-gross{ color:var(--c-text-soft); font-size:.8em; margin-right:.3em; }

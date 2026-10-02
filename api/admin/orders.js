@@ -15,6 +15,13 @@
 // registra un pedido que llegó por fuera de la página (WhatsApp, en persona...)
 // con los mismos totales que el carrito, y envía los correos de notificación
 // al negocio y al cliente igual que el webhook de Wompi con un pago aprobado.
+//
+// Reporte de ingresos y costos (/admin/reports) -- lógica en api/_lib/reports.js:
+//   GET ?view=report&from=YYYY-MM-DD&to=YYYY-MM-DD   pedidos pagados + gastos
+//   PATCH { id, shipping_cost_cop }                   costo real del envío
+//   POST { resource:'expense', day, category, amount_cop, note }   nuevo gasto
+//   DELETE ?expense_id=N                              borra un gasto
+//   POST { resource:'wompi_fee', percent, fixed_cop, vat_percent }  comisión de Wompi
 
 const crypto = require('crypto');
 const { isAuthenticated } = require('../_lib/auth');
@@ -22,6 +29,7 @@ const { sql, ensureSchema, isConfigured } = require('../_lib/db');
 const { computeTotals, createOrder, CheckoutError } = require('../_lib/checkout');
 const { getWompiEnvironment, getWompiKeys } = require('../_lib/wompi-env');
 const { sendAdminOrderNotification, sendCustomerOrderConfirmation } = require('../_lib/notify');
+const { getReportData, createExpense, deleteExpense, setShippingCost, setWompiFee, ReportError } = require('../_lib/reports');
 
 const ALLOWED_STATUSES = [
   'pending',
@@ -267,12 +275,21 @@ module.exports = async (req, res) => {
   try {
     await ensureSchema();
 
+    const query = new URL(req.url, 'http://localhost').searchParams;
+
+    if (req.method === 'GET' && query.get('view') === 'report') {
+      const data = await getReportData({ from: query.get('from'), to: query.get('to') });
+      res.status(200).json(data);
+      return;
+    }
+
     if (req.method === 'GET') {
       const rows = await sql`
         SELECT id, reference, channel, status, quantity, unit_price_cop, amount_cop,
                wompi_transaction_id, environment, shipping_name, shipping_cop,
                coupon_code, discount_cop, subtotal_cop, customer_name, customer_email,
-               customer_phone, customer_address, payment_url, created_at, updated_at
+               customer_phone, customer_address, payment_url, shipping_cost_cop,
+               created_at, updated_at
         FROM orders
         ORDER BY created_at DESC
         LIMIT 300
@@ -297,6 +314,16 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       let body = null;
       try { body = parseBody(req); } catch {}
+      if (body && body.resource === 'expense') {
+        const expense = await createExpense(body);
+        res.status(201).json({ expense });
+        return;
+      }
+      if (body && body.resource === 'wompi_fee') {
+        const wompiFee = await setWompiFee(body);
+        res.status(200).json({ wompi_fee: wompiFee });
+        return;
+      }
       if (body && body.manual && !body.preview) {
         await createManualOrder(body, res);
         return;
@@ -308,8 +335,14 @@ module.exports = async (req, res) => {
     if (req.method === 'PATCH') {
       const body = parseBody(req);
       const id = parseInt(body.id, 10);
-      const status = String(body.status || '');
 
+      if (id && body.shipping_cost_cop !== undefined) {
+        await setShippingCost(id, body.shipping_cost_cop);
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      const status = String(body.status || '');
       if (!id || !ALLOWED_STATUSES.includes(status)) {
         res.status(400).json({ error: 'invalid_input' });
         return;
@@ -320,8 +353,18 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (req.method === 'DELETE' && query.get('expense_id')) {
+      await deleteExpense(query.get('expense_id'));
+      res.status(200).json({ ok: true });
+      return;
+    }
+
     res.status(405).json({ error: 'method_not_allowed' });
   } catch (err) {
+    if (err instanceof ReportError) {
+      res.status(400).json({ error: 'invalid_input', message: err.message });
+      return;
+    }
     console.error('Error en /api/admin/orders:', err);
     res.status(500).json({ error: 'server_error' });
   }

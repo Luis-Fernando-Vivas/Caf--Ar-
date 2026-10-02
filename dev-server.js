@@ -67,7 +67,12 @@ async function handleApi(req, res, pathname) {
   req.body = contentType.includes('application/json') ? raw : raw;
 
   try {
-    delete require.cache[require.resolve(filePath)]; // recarga en caliente en cada request
+    // Recarga en caliente en cada request: el endpoint y también api/_lib, si
+    // no un cambio en db.js (ej. una migración nueva) no se ve hasta reiniciar.
+    const apiDir = path.join(ROOT, 'api') + path.sep;
+    Object.keys(require.cache).forEach((key) => {
+      if (key.startsWith(apiDir)) delete require.cache[key];
+    });
     const handler = require(filePath);
     await handler(req, res);
   } catch (err) {

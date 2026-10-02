@@ -547,6 +547,31 @@ function openOrderModal(o){
   });
   statusSelect.onchange = () => updateStatus(o.id, statusSelect.value, statusSelect);
 
+  // Lo que de verdad le cobró la transportadora (distinto de lo que pagó el
+  // cliente por el envío). Alimenta el reporte de /admin/reports.
+  const costInput = document.getElementById('modalShippingCost');
+  const costState = document.getElementById('modalShippingCostState');
+  costInput.value = o.shipping_cost_cop ?? '';
+  costState.textContent = '';
+  costInput.onchange = async () => {
+    const value = costInput.value === '' ? null : Number(costInput.value);
+    costInput.disabled = true;
+    costState.textContent = 'Guardando…';
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: o.id, shipping_cost_cop: value }),
+      });
+      costState.textContent = res.ok ? 'Guardado' : 'No se pudo guardar';
+      if (res.ok) o.shipping_cost_cop = value;
+    } catch {
+      costState.textContent = 'No se pudo guardar';
+    } finally {
+      costInput.disabled = false;
+    }
+  };
+
   overlay.hidden = false;
 }
 
