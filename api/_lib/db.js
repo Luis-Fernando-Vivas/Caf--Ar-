@@ -24,7 +24,7 @@ let schemaReady = null;
 // el guardado en `settings`, ensureSchema se resuelve con UNA sola consulta en
 // vez de ~30 viajes secuenciales a Neon (lo que hacía lenta la primera carga
 // de la tienda en cada arranque en frío de la función).
-const SCHEMA_VERSION = '6';
+const SCHEMA_VERSION = '9';
 
 async function schemaIsCurrent() {
   try {
@@ -203,6 +203,34 @@ function ensureSchema() {
       `;
       await sql`CREATE INDEX IF NOT EXISTS rate_limits_lookup ON rate_limits (bucket, ip, created_at);`;
       await sql`DROP TABLE IF EXISTS login_attempts;`;
+      // Registro personal de bolsas (/admin/bags): las que llegan y las que se
+      // venden cada día, en grano o molido. No toca el stock de la tienda.
+      await sql`
+        CREATE TABLE IF NOT EXISTS bag_movements (
+          id SERIAL PRIMARY KEY,
+          moved_on DATE NOT NULL,
+          kind TEXT NOT NULL,
+          grind TEXT NOT NULL,
+          quantity INTEGER NOT NULL,
+          note TEXT NOT NULL DEFAULT '',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS bag_movements_moved_on ON bag_movements (moved_on);`;
+      // Cada movimiento va por producto + variación (opción de molienda del
+      // producto). "grind" queda solo para los registros de la primera versión.
+      await sql`ALTER TABLE bag_movements ADD COLUMN IF NOT EXISTS product_id INTEGER;`;
+      await sql`ALTER TABLE bag_movements ADD COLUMN IF NOT EXISTS product_name TEXT;`;
+      await sql`ALTER TABLE bag_movements ADD COLUMN IF NOT EXISTS variant TEXT;`;
+      await sql`ALTER TABLE bag_movements ALTER COLUMN grind DROP NOT NULL;`;
+      // Cuándo salió el pedido: las bolsas vendidas se descuentan ese día.
+      // Los ya enviados antes de existir la columna toman la fecha del correo
+      // de despacho o, si no se mandó, la de su última actualización.
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ;`;
+      await sql`
+        UPDATE orders SET shipped_at = COALESCE(shipped_notified_at, updated_at)
+        WHERE status = 'shipped' AND shipped_at IS NULL;
+      `;
 
       // Semillas: si el catálogo está vacío, migra el único producto que existía
       // hardcodeado en el sitio, así el catálogo nunca queda vacío durante el rollout.

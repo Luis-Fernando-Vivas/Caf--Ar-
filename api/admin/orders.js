@@ -26,6 +26,11 @@
 //   POST { resource:'expense', day, category, amount_cop, note }   nuevo gasto
 //   DELETE ?expense_id=N                              borra un gasto
 //   POST { resource:'wompi_fee', percent, fixed_cop, vat_percent }  comisión de Wompi
+//
+// Registro personal de bolsas (/admin/bags) -- lógica en api/_lib/bags.js:
+//   GET ?view=bags                    productos, movimientos y ventas de los pedidos
+//   POST { resource:'bag', day, kind, product_id, variant, quantity, note }   llegada o salida
+//   DELETE ?bag_id=N                                   borra un movimiento
 
 const crypto = require('crypto');
 const { isAuthenticated } = require('../_lib/auth');
@@ -36,6 +41,7 @@ const {
   sendAdminOrderNotification, sendCustomerOrderConfirmation, sendOrderShippedNotification,
 } = require('../_lib/notify');
 const { getReportData, createExpense, deleteExpense, setShippingCost, setWompiFee, ReportError } = require('../_lib/reports');
+const { getBagData, createBagMovement, deleteBagMovement, BagError } = require('../_lib/bags');
 
 const ALLOWED_STATUSES = [
   'pending',
@@ -280,7 +286,7 @@ async function markShipped(id, body, res) {
   const rows = await sql`
     UPDATE orders
     SET status = 'shipped', shipping_carrier = ${carrier}, tracking_number = ${trackingNumber},
-        tracking_url = ${trackingUrl || null}, updated_at = now()
+        tracking_url = ${trackingUrl || null}, shipped_at = COALESCE(shipped_at, now()), updated_at = now()
     WHERE id = ${id}
     RETURNING *
   `;
@@ -330,6 +336,11 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (req.method === 'GET' && query.get('view') === 'bags') {
+      res.status(200).json(await getBagData());
+      return;
+    }
+
     if (req.method === 'GET') {
       const rows = await sql`
         SELECT id, reference, channel, status, quantity, unit_price_cop, amount_cop,
@@ -365,6 +376,11 @@ module.exports = async (req, res) => {
       if (body && body.resource === 'expense') {
         const expense = await createExpense(body);
         res.status(201).json({ expense });
+        return;
+      }
+      if (body && body.resource === 'bag') {
+        const movement = await createBagMovement(body);
+        res.status(201).json({ movement });
         return;
       }
       if (body && body.resource === 'wompi_fee') {
@@ -412,9 +428,15 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (req.method === 'DELETE' && query.get('bag_id')) {
+      await deleteBagMovement(query.get('bag_id'));
+      res.status(200).json({ ok: true });
+      return;
+    }
+
     res.status(405).json({ error: 'method_not_allowed' });
   } catch (err) {
-    if (err instanceof ReportError) {
+    if (err instanceof ReportError || err instanceof BagError) {
       res.status(400).json({ error: 'invalid_input', message: err.message });
       return;
     }

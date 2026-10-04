@@ -486,3 +486,31 @@ table.admin-table{ width:100%; border-collapse:collapse; font-size:.85rem; min-w
 @media (max-width:1100px){ .admin-stats.report-stats{ grid-template-columns:repeat(3,1fr); } }
 @media (max-width:640px){ .admin-stats.report-stats{ grid-template-columns:repeat(2,1fr); } }
 .report-table .report-gross{ color:var(--c-text-soft); font-size:.8em; margin-right:.3em; }
+
+/* ---------- registro personal de bolsas (/admin/bags) ---------- */
+.bags-intro{ margin:0 0 1.2rem; font-size:.86rem; color:var(--c-text-soft); }
+.admin-stats.bags-stats{ grid-template-columns:repeat(4,1fr); }
+@media (max-width:900px){ .admin-stats.bags-stats{ grid-template-columns:repeat(2,1fr); } }
+.admin-stat-card strong.is-negative{ color:var(--c-red); }
+.bags-toggle{
+  display:inline-flex; padding:.25rem; border-radius:100px; background:var(--c-cream);
+  border:1px solid rgba(36,27,18,.12); margin-bottom:1.1rem;
+}
+.bags-toggle label{ cursor:pointer; }
+.bags-toggle input{ position:absolute; opacity:0; pointer-events:none; }
+.bags-toggle span{
+  display:block; padding:.45em 1.2em; border-radius:100px; font-size:.85rem; font-weight:600; color:var(--c-text-soft);
+}
+.bags-toggle input:checked + span{ background:var(--c-red); color:var(--c-white); }
+.bags-toggle input[value="in"]:checked + span{ background:#00875f; }
+.bags-toggle input:focus-visible + span{ outline:2px solid var(--c-red); outline-offset:2px; }
+.bags-table td.num, .bags-table th.num{ text-align:right; }
+.bags-table td.bags-note{ color:var(--c-text-soft); white-space:normal; }
+.status-badge.bag-kind-in{ background:rgba(0,176,144,.12); color:#00875f; }
+.status-badge.bag-kind-sale{ background:rgba(179,32,39,.12); color:var(--c-red); }
+.status-badge.bag-kind-out{ background:rgba(255,205,53,.25); color:var(--c-kraft-dark); }
+.bags-table .is-negative{ color:var(--c-red); }
+.bags-table td.bags-left{ font-weight:700; color:var(--c-black); }
+.bags-table td.bags-left.is-negative{ color:var(--c-red); }
+.bags-kind-hint{ margin:-.4rem 0 1rem; }
+.admin-form-field[hidden]{ display:none; }
