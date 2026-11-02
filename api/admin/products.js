@@ -83,6 +83,12 @@ function normalizeProductInput(body, { partial } = {}) {
     out.status = status;
   }
 
+  ['store_badge', 'product_badge'].forEach((key) => {
+    if (!partial || body[key] !== undefined) {
+      out[key] = String(body[key] || '').trim().slice(0, 40);
+    }
+  });
+
   if (!partial || body.sort_order !== undefined) {
     out.sort_order = parseInt(body.sort_order, 10) || 0;
   }
@@ -109,7 +115,7 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const rows = await sql`
         SELECT id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
-               grind_options, status, sort_order, created_at, updated_at
+               grind_options, status, sort_order, store_badge, product_badge, created_at, updated_at
         FROM products
         ORDER BY sort_order ASC, id ASC
       `;
@@ -128,12 +134,13 @@ module.exports = async (req, res) => {
 
       try {
         const rows = await sql`
-          INSERT INTO products (slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags, grind_options, status, sort_order)
+          INSERT INTO products (slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags, grind_options, status, sort_order, store_badge, product_badge)
           VALUES (${data.slug}, ${data.name}, ${data.description}, ${data.price_cop}, ${data.compare_at_price_cop ?? null}, ${data.stock},
                   ${JSON.stringify(data.images)}::jsonb, ${JSON.stringify(data.flavor_tags)}::jsonb,
-                  ${JSON.stringify(data.grind_options)}::jsonb, ${data.status}, ${data.sort_order})
+                  ${JSON.stringify(data.grind_options)}::jsonb, ${data.status}, ${data.sort_order},
+                  ${data.store_badge}, ${data.product_badge})
           RETURNING id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
-                    grind_options, status, sort_order, created_at, updated_at
+                    grind_options, status, sort_order, store_badge, product_badge, created_at, updated_at
         `;
         res.status(201).json({ product: rows[0] });
       } catch (err) {
@@ -181,10 +188,12 @@ module.exports = async (req, res) => {
             grind_options = COALESCE(${data.grind_options ? JSON.stringify(data.grind_options) : null}::jsonb, grind_options),
             status = COALESCE(${data.status ?? null}, status),
             sort_order = COALESCE(${data.sort_order ?? null}, sort_order),
+            store_badge = COALESCE(${data.store_badge ?? null}, store_badge),
+            product_badge = COALESCE(${data.product_badge ?? null}, product_badge),
             updated_at = now()
           WHERE id = ${id}
           RETURNING id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
-                    grind_options, status, sort_order, created_at, updated_at
+                    grind_options, status, sort_order, store_badge, product_badge, created_at, updated_at
         `;
         if (!rows.length) {
           res.status(404).json({ error: 'not_found' });

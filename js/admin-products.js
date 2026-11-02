@@ -9,6 +9,15 @@ function formatCOP(n) {
 let editingId = null;
 let images = []; // [{url, public_id}]
 
+let dragIdx = null;
+
+function moveImage(from, to) {
+  if (to < 0 || to >= images.length || from === to) return;
+  const [img] = images.splice(from, 1);
+  images.splice(to, 0, img);
+  renderThumbs();
+}
+
 function renderThumbs() {
   const strip = document.getElementById('thumbStrip');
   const addBtn = document.getElementById('addImageBtn');
@@ -17,23 +26,58 @@ function renderThumbs() {
   images.forEach((img, idx) => {
     const div = document.createElement('div');
     div.className = 'admin-thumb' + (idx === 0 ? ' is-cover' : '');
+    div.draggable = true;
+    div.addEventListener('dragstart', (e) => {
+      dragIdx = idx;
+      div.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    div.addEventListener('dragend', () => {
+      dragIdx = null;
+      div.classList.remove('is-dragging');
+    });
+    div.addEventListener('dragover', (e) => {
+      if (dragIdx === null) return;
+      e.preventDefault();
+      div.classList.add('is-drop-target');
+    });
+    div.addEventListener('dragleave', () => div.classList.remove('is-drop-target'));
+    div.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (dragIdx !== null) moveImage(dragIdx, idx);
+    });
+
     const image = document.createElement('img');
     image.src = img.url;
     image.alt = '';
+    image.draggable = false;
     div.appendChild(image);
 
     const actions = document.createElement('div');
     actions.className = 'admin-thumb-actions';
 
+    const moves = document.createElement('div');
+    moves.className = 'admin-thumb-moves';
+    const leftBtn = document.createElement('button');
+    leftBtn.type = 'button';
+    leftBtn.textContent = '←';
+    leftBtn.title = 'Mover a la izquierda';
+    leftBtn.disabled = idx === 0;
+    leftBtn.addEventListener('click', () => moveImage(idx, idx - 1));
+    const rightBtn = document.createElement('button');
+    rightBtn.type = 'button';
+    rightBtn.textContent = '→';
+    rightBtn.title = 'Mover a la derecha';
+    rightBtn.disabled = idx === images.length - 1;
+    rightBtn.addEventListener('click', () => moveImage(idx, idx + 1));
+    moves.append(leftBtn, rightBtn);
+    actions.appendChild(moves);
+
     if (idx !== 0) {
       const coverBtn = document.createElement('button');
       coverBtn.type = 'button';
       coverBtn.textContent = 'Portada';
-      coverBtn.addEventListener('click', () => {
-        images.splice(idx, 1);
-        images.unshift(img);
-        renderThumbs();
-      });
+      coverBtn.addEventListener('click', () => moveImage(idx, 0));
       actions.appendChild(coverBtn);
     }
 
@@ -63,6 +107,8 @@ function resetForm() {
   document.getElementById('fStock').value = '';
   document.getElementById('fTags').value = '';
   document.getElementById('fGrindOptions').value = '';
+  document.getElementById('fStoreBadge').value = '';
+  document.getElementById('fProductBadge').value = '';
   document.getElementById('fDescription').value = '';
   document.getElementById('formTitle').textContent = 'Nuevo producto';
   document.getElementById('cancelEditBtn').style.display = 'none';
@@ -82,6 +128,8 @@ function loadIntoForm(product) {
   document.getElementById('fStock').value = product.stock;
   document.getElementById('fTags').value = (product.flavor_tags || []).join(', ');
   document.getElementById('fGrindOptions').value = (product.grind_options || []).join(', ');
+  document.getElementById('fStoreBadge').value = product.store_badge || '';
+  document.getElementById('fProductBadge').value = product.product_badge || '';
   document.getElementById('fDescription').value = product.description || '';
   document.getElementById('formTitle').textContent = 'Editar producto';
   document.getElementById('cancelEditBtn').style.display = '';
@@ -252,6 +300,8 @@ async function saveProduct(e) {
     flavor_tags: document.getElementById('fTags').value.split(',').map((t) => t.trim()).filter(Boolean),
     grind_options: document.getElementById('fGrindOptions').value.split(',').map((t) => t.trim()).filter(Boolean),
     description: document.getElementById('fDescription').value,
+    store_badge: document.getElementById('fStoreBadge').value.trim(),
+    product_badge: document.getElementById('fProductBadge').value.trim(),
     images,
   };
 

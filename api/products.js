@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     if (slug) {
       const rows = await sql`
         SELECT id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
-               grind_options, status
+               grind_options, status, store_badge, product_badge
         FROM products
         WHERE slug = ${slug} AND status = 'active'
         LIMIT 1
@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
 
     const rows = await sql`
       SELECT id, slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags,
-             grind_options, status
+             grind_options, status, store_badge, product_badge
       FROM products
       WHERE status = 'active'
       ORDER BY sort_order ASC, id ASC
