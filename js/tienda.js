@@ -35,10 +35,10 @@ function renderProductCard(product) {
     ribbon.className = 'product-card-ribbon';
     ribbon.textContent = 'Agotado';
     media.appendChild(ribbon);
-  } else {
+  } else if (product.store_badge) {
     const eyebrow = document.createElement('span');
     eyebrow.className = 'product-card-eyebrow';
-    eyebrow.textContent = 'Lanzamiento';
+    eyebrow.textContent = product.store_badge;
     media.appendChild(eyebrow);
   }
 

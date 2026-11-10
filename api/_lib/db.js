@@ -24,7 +24,7 @@ let schemaReady = null;
 // el guardado en `settings`, ensureSchema se resuelve con UNA sola consulta en
 // vez de ~30 viajes secuenciales a Neon (lo que hacía lenta la primera carga
 // de la tienda en cada arranque en frío de la función).
-const SCHEMA_VERSION = '9';
+const SCHEMA_VERSION = '10';
 
 async function schemaIsCurrent() {
   try {
@@ -136,6 +136,18 @@ function ensureSchema() {
       `;
       await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_price_cop INTEGER;`;
       await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS grind_options JSONB NOT NULL DEFAULT '[]';`;
+      // Badges editables desde el backoffice: el de la tarjeta en /tienda y el
+      // que va sobre el precio en la ficha. '' = no se muestra. Las filas viejas
+      // (NULL) heredan el texto que antes estaba fijo en el código; la ficha solo
+      // lo mostraba con descuento, así que sin descuento arranca vacío.
+      await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS store_badge TEXT;`;
+      await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS product_badge TEXT;`;
+      await sql`UPDATE products SET store_badge = 'Lanzamiento' WHERE store_badge IS NULL;`;
+      await sql`
+        UPDATE products SET product_badge = CASE
+          WHEN compare_at_price_cop > price_cop THEN 'Precio de lanzamiento' ELSE '' END
+        WHERE product_badge IS NULL;
+      `;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_rate_id INTEGER;`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_name TEXT;`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cop INTEGER NOT NULL DEFAULT 0;`;
@@ -235,7 +247,7 @@ function ensureSchema() {
       // Semillas: si el catálogo está vacío, migra el único producto que existía
       // hardcodeado en el sitio, así el catálogo nunca queda vacío durante el rollout.
       await sql`
-        INSERT INTO products (slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags, grind_options, status, sort_order)
+        INSERT INTO products (slug, name, description, price_cop, compare_at_price_cop, stock, images, flavor_tags, grind_options, status, sort_order, store_badge, product_badge)
         SELECT
           'cafe-aru-honey-500g',
           'Café Arú Honey 500g',
@@ -247,7 +259,9 @@ function ensureSchema() {
           '["Dulzura natural","Notas cítricas","Chocolate","Frutos secos"]'::jsonb,
           '["Grano entero","Molido"]'::jsonb,
           'active',
-          0
+          0,
+          'Lanzamiento',
+          'Precio de lanzamiento'
         WHERE NOT EXISTS (SELECT 1 FROM products);
       `;
       await sql`

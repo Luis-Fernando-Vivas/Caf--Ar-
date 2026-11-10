@@ -102,6 +102,14 @@
               <label for="fStock">Stock</label>
               <input id="fStock" type="number" min="0" step="1" required>
             </div>
+            <div class="admin-form-field">
+              <label for="fStoreBadge">Etiqueta en la tienda</label>
+              <input id="fStoreBadge" maxlength="40" placeholder="Ej. Lanzamiento (vacío = sin etiqueta)">
+            </div>
+            <div class="admin-form-field">
+              <label for="fProductBadge">Etiqueta en la ficha del producto</label>
+              <input id="fProductBadge" maxlength="40" placeholder="Ej. Precio de lanzamiento (vacío = sin etiqueta)">
+            </div>
             <div class="admin-form-field span-2">
               <label for="fTags">Notas de sabor (separadas por coma)</label>
               <input id="fTags" placeholder="Dulzura natural, Notas cítricas, Chocolate">
@@ -119,6 +127,7 @@
               <div id="thumbStrip" class="admin-thumb-strip">
                 <button type="button" id="addImageBtn" class="admin-thumb-add">+ Subir foto</button>
               </div>
+              <span class="admin-form-hint">Arrastra las fotos (o usa las flechas) para cambiar el orden. La primera es la portada.</span>
               <span class="admin-form-hint" id="cloudinaryHint"></span>
             </div>
           </div>

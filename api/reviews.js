@@ -3,7 +3,9 @@
 //
 // GET  ?product_id=X&all=1   (requiere sesión admin) -> todas las reseñas de ese
 //                             producto, cualquier status, para moderar.
-// GET  ?product_id=X          (público) -> solo reseñas 'approved' + promedio/conteo.
+// GET  ?product_id=X          (público) -> reseñas 'approved' de TODA la tienda +
+//                             promedio/conteo: se muestran las mismas en todas las
+//                             fichas. product_id se sigue aceptando pero no filtra.
 // POST { product_id, author_name, rating, comment }  (público) -> crea una reseña
 //      en estado 'pending'. No aparece en el sitio hasta que un admin la apruebe.
 // PATCH { id, status } (requiere sesión admin) -> aprobar/rechazar una reseña.
@@ -56,16 +58,11 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'GET') {
-      const productId = parseInt(url.searchParams.get('product_id'), 10);
-      if (!productId) {
-        res.status(400).json({ error: 'invalid_input', message: 'Falta product_id.' });
-        return;
-      }
-
       const rows = await sql`
-        SELECT id, author_name, rating, comment, created_at FROM reviews
-        WHERE product_id = ${productId} AND status = 'approved'
-        ORDER BY created_at DESC
+        SELECT r.id, r.author_name, r.rating, r.comment, r.created_at FROM reviews r
+        JOIN products p ON p.id = r.product_id
+        WHERE r.status = 'approved' AND p.status = 'active'
+        ORDER BY r.created_at DESC
       `;
       const count = rows.length;
       const average = count ? rows.reduce((sum, r) => sum + r.rating, 0) / count : 0;

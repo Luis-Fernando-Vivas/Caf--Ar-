@@ -263,11 +263,11 @@ function renderProduct(product, freeShippingRule) {
   if (hasDiscount) {
     compareEl.textContent = '$' + formatCOP(product.compare_at_price_cop);
     compareEl.style.display = '';
-    launchBadge.style.display = '';
   } else {
     compareEl.style.display = 'none';
-    launchBadge.style.display = 'none';
   }
+  launchBadge.textContent = product.product_badge || '';
+  launchBadge.style.display = product.product_badge ? '' : 'none';
 
   document.getElementById('prodDesc').textContent = product.description || '';
   document.getElementById('tabDescLong').textContent = product.description || '';
