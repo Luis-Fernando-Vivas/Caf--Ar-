@@ -455,10 +455,10 @@ function renderOrders(orders){
 
 // Transportadoras para el despacho. La URL es la página de rastreo de cada una
 // (el cliente ingresa la guía ahí); se puede reemplazar por un link directo
-// desde el formulario.
+// desde el formulario. La primera es la predeterminada.
 const CARRIERS = [
+  { name: 'Interrapidísimo', url: 'https://www.interrapidisimo.com/' },
   { name: 'Servientrega', url: 'https://www.servientrega.com/wps/portal/rastreo-envio' },
-  { name: 'Interrapidísimo', url: 'https://www.interrapidisimo.com/sigue-tu-envio/' },
   { name: 'Coordinadora', url: 'https://coordinadora.com/rastreo/rastreo-de-guia/' },
   { name: 'Envía', url: 'https://envia.co/' },
   { name: 'TCC', url: 'https://tcc.com.co/courier/mensajeria/rastrear-envio/' },
@@ -593,6 +593,20 @@ function openOrderModal(o){
     });
   }
   document.getElementById('modalShipEditBtn').onclick = () => openShipPanel(o);
+  const waBtn = document.getElementById('modalShipWhatsappBtn');
+  const waState = document.getElementById('modalShipWhatsappState');
+  waBtn.hidden = !o.tracking_number;
+  waState.textContent = '';
+  waBtn.onclick = async () => {
+    const msg = buildShippedWhatsappMessage(o);
+    try {
+      await navigator.clipboard.writeText(msg);
+      waState.textContent = 'Mensaje copiado ✓';
+    } catch {
+      // Sin acceso al portapapeles (p. ej. http): se muestra para copiar a mano.
+      window.prompt('Copia el mensaje:', msg);
+    }
+  };
   closeShipPanel();
 
   // Lo que de verdad le cobró la transportadora (distinto de lo que pagó el
@@ -621,6 +635,30 @@ function openOrderModal(o){
   };
 
   overlay.hidden = false;
+}
+
+// Mensaje de despacho para pegar en WhatsApp.
+function buildShippedWhatsappMessage(o){
+  const firstName = String(o.customer_name || '').trim().split(/\s+/)[0] || '';
+  const carrier = CARRIERS.find((c) => c.name === o.shipping_carrier);
+  const link = o.tracking_url || (carrier && carrier.url) || '';
+  return [
+    `¡Hola${firstName ? ' ' + firstName : ''}! 👋 Tu pedido ya ha sido despachado. 📦✨`,
+    '',
+    'Te compartimos los datos de tu envío:',
+    '',
+    `🚚 Empresa: ${o.shipping_carrier || ''}`,
+    '',
+    `📌 Número de guía: ${o.tracking_number || ''}`,
+    '',
+    '¿Cómo rastrear tu paquete?',
+    '',
+    `Ingresa a ${link}`,
+    '',
+    'Busca la opción "Rastrea tu envío".',
+    '',
+    'Ingresa el número de guía indicado arriba y haz clic en Consultar.',
+  ].join('\n');
 }
 
 function closeOrderModal(){
