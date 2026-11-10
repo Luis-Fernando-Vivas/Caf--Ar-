@@ -24,7 +24,7 @@ let schemaReady = null;
 // el guardado en `settings`, ensureSchema se resuelve con UNA sola consulta en
 // vez de ~30 viajes secuenciales a Neon (lo que hacía lenta la primera carga
 // de la tienda en cada arranque en frío de la función).
-const SCHEMA_VERSION = '10';
+const SCHEMA_VERSION = '11';
 
 async function schemaIsCurrent() {
   try {
@@ -280,6 +280,26 @@ function ensureSchema() {
           ('Daniela Castro', 5, 'compre para regalar y termine pidiendo otra bolsa pa mi mismo se siente que es autentico cafe huilense', '2026-08-14T20:30:00-05:00'::timestamptz)
         ) AS r(author_name, rating, comment, created_at)
         WHERE p.slug = 'cafe-aru-honey-500g' AND NOT EXISTS (SELECT 1 FROM reviews);
+      `;
+      // Testimonios de clientes que escribieron por WhatsApp (nov 2026). Cada uno
+      // se inserta una sola vez (mismo autor + comentario no se duplica).
+      await sql`
+        INSERT INTO reviews (product_id, author_name, rating, comment, status, created_at)
+        SELECT p.id, r.author_name, r.rating, r.comment, 'approved', r.created_at
+        FROM products p, (VALUES
+          ('Valentina R.', 5, 'Lo pedí por curiosidad porque nunca había probado un honey y ahora no quiero otro. Es dulce sin azúcar, como a panela con algo de fruta. En V60 queda espectacular.', '2026-11-09T12:00:00-05:00'::timestamptz),
+          ('Andrés F.', 5, 'Llegó en dos días y bien empacado. Lo muelo en casa y el aroma llena toda la cocina, ya voy por la segunda bolsa.', '2026-11-08T12:00:00-05:00'::timestamptz),
+          ('Daniela M.', 4, 'Muy rico y suave, nada amargo. Le pongo cuatro estrellas porque me hubiera gustado que viniera en presentación más grande, pero el sabor es un diez.', '2026-11-07T12:00:00-05:00'::timestamptz),
+          ('Camilo G.', 5, 'Mi papá es cafetero y es exigente con el café. Le regalé esta bolsa y me dijo que estaba “bien trabajado”. Para mí eso ya es mucho decir.', '2026-11-06T12:00:00-05:00'::timestamptz),
+          ('Laura P.', 5, 'Lo tomo en prensa francesa por las mañanas. Tiene un cuerpo cremoso y un final como a caramelo que me encanta. Se nota que es café de verdad.', '2026-11-04T12:00:00-05:00'::timestamptz),
+          ('Santiago H.', 5, 'Pensé que con el calor no me iba a provocar café caliente, pero lo preparo frío (cold brew) y queda delicioso, muy dulce y frutal.', '2026-11-03T12:00:00-05:00'::timestamptz),
+          ('María José C.', 4, 'Buen café y buena atención, me respondieron rápido por WhatsApp cuando pregunté por el envío. El sabor es más dulce de lo que esperaba, en el buen sentido.', '2026-11-02T12:00:00-05:00'::timestamptz),
+          ('Julián T.', 5, 'Lo compré para la oficina y todos preguntaron cuál era. La bolsa de 500 g rinde bastante. Ojala saquen uno presentación mas grande', '2026-11-01T12:00:00-05:00'::timestamptz)
+        ) AS r(author_name, rating, comment, created_at)
+        WHERE p.slug = 'cafe-aru-honey-500g'
+          AND NOT EXISTS (
+            SELECT 1 FROM reviews x WHERE x.author_name = r.author_name AND x.comment = r.comment
+          );
       `;
       await sql`
         INSERT INTO settings (key, value) VALUES ('schema_version', ${SCHEMA_VERSION})
